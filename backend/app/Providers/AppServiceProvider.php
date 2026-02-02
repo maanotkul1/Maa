@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\HistoryJob;
+use App\Models\Tool;
+use App\Observers\HistoryJobObserver;
+use App\Observers\ToolObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register model observers for Google Sheets sync
+        HistoryJob::observe(HistoryJobObserver::class);
+        Tool::observe(ToolObserver::class);
     }
 }

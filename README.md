@@ -24,6 +24,27 @@ Sistem manajemen pekerjaan untuk Field Engineer jaringan FTTH dengan desain mode
   - Menambah catatan hasil pekerjaan
   - Timeline status job
 
+### Tools Data Management dengan QR Code (NEW)
+- **Admin:**
+  - Membuat dan mengelola database tools/equipment
+  - Generate unique QR codes untuk setiap tool
+  - Monitor status update tools secara berkala (setiap 1 bulan)
+  - Lihat riwayat scan dan update history
+  
+- **Field Engineer:**
+  - Scan QR code untuk update status tool
+  - Validasi automatic 1 bulan rule
+  - View tools yang sudah diassign
+  - Track riwayat scan personal
+
+- **Features:**
+  - QR Code generation dengan expiry date configurable
+  - Monthly update enforcement
+  - Scan history tracking (device type, IP, timestamp)
+  - Dashboard monitoring status update
+  - Real-time validation & status update
+  - Error handling & notifications
+
 ### User Management (Admin)
 - Manajemen user (Admin & FE)
 - Edit profil user
@@ -225,6 +246,35 @@ Setelah menjalankan seeder, Anda dapat login dengan:
 - [ ] Tagging & kategori lokasi
 - [ ] Comment/Chat per job
 - [ ] Role Supervisor/Team Leader
+- [ ] Mobile App untuk QR Scanner native
+- [ ] Batch QR Code generation
+- [ ] Advanced analytics & compliance reports
+- [ ] Email/WhatsApp notifications untuk update reminder
+
+## Dokumentasi Fitur QR Code
+
+Untuk detail lengkap tentang fitur QR Code Tools Management:
+
+- **Setup Guide:** [QR_CODE_SETUP_GUIDE.md](./QR_CODE_SETUP_GUIDE.md)
+- **Feature Documentation:** [QR_CODE_FEATURE_DOCUMENTATION.md](./QR_CODE_FEATURE_DOCUMENTATION.md)
+
+### Quick Start QR Code Feature
+
+1. **Admin Generate QR:**
+   - Go to Tools Data > Select Tool
+   - Click "Generate QR Code"
+   - Set expiry days (default 30 hari)
+
+2. **Field Engineer Scan QR:**
+   - Go to tool detail
+   - Click "Scan QR Code"
+   - Scan atau paste QR code data
+   - System validasi & update automatically
+
+3. **Monitor Status:**
+   - View dashboard dengan status semua tools
+   - Filter by "Ready for Update" or "Waiting"
+   - See compliance rate & next update schedule
 
 ## Lisensi
 

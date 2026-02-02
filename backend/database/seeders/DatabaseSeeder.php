@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin User
         User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'admin@mail.com'],
             [
                 'name' => 'Admin',
                 'password' => Hash::make('password'),
@@ -25,27 +25,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Create Field Engineer Users
-        User::updateOrCreate(
-            ['email' => 'fe1@example.com'],
-            [
-                'name' => 'Field Engineer 1',
-                'password' => Hash::make('password'),
-                'role' => 'fe',
-                'status' => 'active',
-                'phone' => '081234567891',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'fe2@example.com'],
-            [
-                'name' => 'Field Engineer 2',
-                'password' => Hash::make('password'),
-                'role' => 'fe',
-                'status' => 'active',
-                'phone' => '081234567892',
-            ]
-        );
+        // Seed Tools Data
+        $this->call(ToolDataSeeder::class);
     }
 }

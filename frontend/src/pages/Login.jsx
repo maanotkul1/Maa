@@ -1,6 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+// Inline SVG icons untuk mengurangi dependency pada Material Icons saat login
+const EmailIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm6-10V7a3 3 0 00-6 0v4a3 3 0 006 0z" />
+  </svg>
+);
+
+const ErrorIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+  </svg>
+);
+
+const LoginIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+  </svg>
+);
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,6 +34,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Preload logo dengan native lazy loading
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/retina-bnet-1.png';
+    document.head.appendChild(link);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,17 +63,23 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-colors">
       <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200 dark:border-gray-700 transition-colors">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-100 dark:bg-primary-900/50 rounded-xl mb-4">
-            <span className="material-icons text-primary-600 dark:text-primary-400 text-5xl">work_outline</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Job Management</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">FTTH Network System</p>
+          <img 
+            src="/retina-bnet-1.png" 
+            alt="Bnet Logo" 
+            className="mx-auto w-40 h-24 object-contain mb-4"
+            loading="eager"
+            decoding="async"
+          />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">History Job Management</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Operational Management System</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 px-4 py-3 rounded-r-lg flex items-start gap-3 animate-shake">
-              <span className="material-icons text-red-500 dark:text-red-400 text-xl flex-shrink-0">error_outline</span>
+              <div className="text-red-500 dark:text-red-400 flex-shrink-0 pt-0.5">
+                <ErrorIcon />
+              </div>
               <span className="text-sm pt-0.5">{error}</span>
             </div>
           )}
@@ -49,9 +89,9 @@ export default function Login() {
               Email Address
             </label>
             <div className="relative">
-              <span className="material-icons absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xl pointer-events-none">
-                email
-              </span>
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 flex-shrink-0">
+                <EmailIcon />
+              </div>
               <input
                 type="email"
                 value={email}
@@ -68,9 +108,9 @@ export default function Login() {
               Password
             </label>
             <div className="relative">
-              <span className="material-icons absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xl pointer-events-none">
-                lock
-              </span>
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 flex-shrink-0">
+                <LockIcon />
+              </div>
               <input
                 type="password"
                 value={password}
@@ -94,7 +134,7 @@ export default function Login() {
               </>
             ) : (
               <>
-                <span className="material-icons text-xl">login</span>
+                <LoginIcon />
                 <span>Login</span>
               </>
             )}

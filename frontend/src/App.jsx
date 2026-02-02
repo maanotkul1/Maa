@@ -1,17 +1,34 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Jobs from './pages/Jobs';
-import CreateJob from './pages/CreateJob';
-import EditJob from './pages/EditJob';
-import JobDetail from './pages/JobDetail';
-import JobTrash from './pages/JobTrash';
-import Odp from './pages/Odp';
-import Users from './pages/Users';
-import Profile from './pages/Profile';
+
+// Lazy load Dashboard dan semua pages untuk mempercepat login initial load
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const HistoryJobs = lazy(() => import('./pages/HistoryJobs'));
+const CreateHistoryJob = lazy(() => import('./pages/CreateHistoryJob'));
+const EditHistoryJob = lazy(() => import('./pages/EditHistoryJob'));
+const HistoryJobDetail = lazy(() => import('./pages/HistoryJobDetail'));
+const HistoryJobDetailInstalasi = lazy(() => import('./pages/HistoryJobDetailInstalasi'));
+const HistoryJobDetailFO = lazy(() => import('./pages/HistoryJobDetailFO'));
+const HistoryJobDetailWireless = lazy(() => import('./pages/HistoryJobDetailWireless'));
+const ToolsData = lazy(() => import('./pages/ToolsData'));
+const ToolsDataDetail = lazy(() => import('./pages/ToolsDataDetail'));
+const QRScannerUpdate = lazy(() => import('./pages/QRScannerUpdate'));
+const ToolsMonthlyUpdateStatus = lazy(() => import('./pages/ToolsMonthlyUpdateStatus'));
+const GDriveDashboardPage = lazy(() => import('./pages/GDriveDashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+// Minimal loading component untuk lazy routes
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-300 dark:border-gray-700 border-t-primary-600"></div>
+    </div>
+  );
+}
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -25,64 +42,130 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
-            <Dashboard />
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Dashboard />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/jobs"
-        element={
-          <ProtectedRoute>
-            <Jobs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/jobs/new"
+        path="/history-jobs"
         element={
           <ProtectedRoute requireAdmin>
-            <CreateJob />
+            <Suspense fallback={<LoadingSpinner />}>
+              <HistoryJobs />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/jobs/:id"
-        element={
-          <ProtectedRoute>
-            <JobDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/jobs/:id/edit"
+        path="/history-jobs/new"
         element={
           <ProtectedRoute requireAdmin>
-            <EditJob />
+            <Suspense fallback={<LoadingSpinner />}>
+              <CreateHistoryJob />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/jobs-trash"
+        path="/history-jobs/:id"
         element={
           <ProtectedRoute requireAdmin>
-            <JobTrash />
+            <Suspense fallback={<LoadingSpinner />}>
+              <HistoryJobDetail />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/odp"
+        path="/history-jobs/:id/edit"
         element={
           <ProtectedRoute requireAdmin>
-            <Odp />
+            <Suspense fallback={<LoadingSpinner />}>
+              <EditHistoryJob />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/users"
+        path="/history-jobs/:id/instalasi"
         element={
           <ProtectedRoute requireAdmin>
-            <Users />
+            <Suspense fallback={<LoadingSpinner />}>
+              <HistoryJobDetailInstalasi />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history-jobs/:id/fo"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <HistoryJobDetailFO />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history-jobs/:id/wireless"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <HistoryJobDetailWireless />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tools-data"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ToolsData />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tools-data/scan-qr"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <QRScannerUpdate />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tools-data/monthly-status"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ToolsMonthlyUpdateStatus />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tools-data/:id"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ToolsDataDetail />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gdrive-dashboard"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingSpinner />}>
+              <GDriveDashboardPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -90,7 +173,9 @@ function AppRoutes() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <Profile />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Profile />
+            </Suspense>
           </ProtectedRoute>
         }
       />

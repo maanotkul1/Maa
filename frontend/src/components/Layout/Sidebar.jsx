@@ -5,14 +5,9 @@ import { useTheme } from '../../contexts/ThemeContext';
 const menuItems = {
   admin: [
     { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/jobs', icon: 'work', label: 'Job Management' },
-    { path: '/odp', icon: 'location_on', label: 'Master ODP' },
-    { path: '/users', icon: 'people', label: 'User Management' },
-    { path: '/profile', icon: 'person', label: 'Profile' },
-  ],
-  fe: [
-    { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/jobs', icon: 'work', label: 'My Jobs' },
+    { path: '/history-jobs', icon: 'history', label: 'History Job FE' },
+    { path: '/tools-data', icon: 'assignment', label: 'Tools Data Management' },
+    { path: '/gdrive-dashboard', icon: 'cloud', label: 'BA Digital Dashboard' },
     { path: '/profile', icon: 'person', label: 'Profile' },
   ],
 };
@@ -22,7 +17,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
 
-  const items = menuItems[user?.role] || [];
+  const items = menuItems.admin || [];
 
   return (
     <>
@@ -41,9 +36,16 @@ export default function Sidebar({ isOpen, onClose }) {
         }`}
       >
         <div className="p-4 lg:p-6 border-b dark:border-gray-700 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-primary-600 dark:text-primary-400">Job Management</h1>
-            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mt-1">FTTH Network System</p>
+          <div className="flex flex-col items-center text-center gap-3 w-full">
+            <img
+              src="/retina-bnet-1.png"
+              alt="Bnet Logo"
+              className="w-20 h-20 object-contain drop-shadow-sm contrast-125 saturate-125 brightness-110 dark:brightness-125"
+            />
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold text-primary-600 dark:text-primary-400 leading-tight">History Job FE</h1>
+              <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mt-1">Field Engineer System</p>
+            </div>
           </div>
           <button
             onClick={onClose}

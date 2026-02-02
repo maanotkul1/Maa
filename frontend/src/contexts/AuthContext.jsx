@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }) => {
         .then((response) => {
           setUser(response.data);
           localStorage.setItem('user', JSON.stringify(response.data));
+          // Dispatch event to refresh dashboard and other components
+          window.dispatchEvent(new Event('authUserUpdated'));
         })
         .catch(() => {
           localStorage.removeItem('token');
@@ -45,6 +47,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
+    
+    // Dispatch event to refresh dashboard and other components
+    window.dispatchEvent(new Event('authUserUpdated'));
     
     return user;
   };

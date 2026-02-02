@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// VITE_API_URL already includes /api path from .env
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
@@ -17,6 +18,14 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add cache busting headers for GET requests
+    if (config.method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache';
+      config.params = config.params || {};
+      config.params['_t'] = new Date().getTime();
+    }
+    
     return config;
   },
   (error) => {
@@ -28,6 +37,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log error untuk debugging
+    if (import.meta.env.DEV) {
+      console.error('API Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        url: error.config?.url,
+      });
+    }
+    
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

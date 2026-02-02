@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\JobController;
-use App\Http\Controllers\Api\OdpController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\HistoryJobController;
+use App\Http\Controllers\Api\ToolDataController;
+use App\Http\Controllers\Api\ToolController;
+use App\Http\Controllers\Api\GoogleSheetController;
+use App\Http\Controllers\Api\QRCodeController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -20,41 +22,54 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
     Route::get('/dashboard/fe', [DashboardController::class, 'fe']);
 
-    // Jobs
-    Route::get('/jobs', [JobController::class, 'index']);
-    Route::get('/jobs/{id}', [JobController::class, 'show']);
-    Route::post('/jobs', [JobController::class, 'store']);
-    Route::put('/jobs/{id}', [JobController::class, 'update']);
-    Route::delete('/jobs/{id}', [JobController::class, 'destroy']);
-    Route::post('/jobs/{id}/status', [JobController::class, 'updateStatus']);
-    Route::post('/jobs/{id}/cancel', [JobController::class, 'cancel']);
-    Route::post('/jobs/{id}/notes', [JobController::class, 'addNote']);
-    Route::post('/jobs/{id}/photos', [JobController::class, 'uploadPhoto']);
-    Route::delete('/jobs/{id}/photos/{photoId}', [JobController::class, 'deletePhoto']);
-    Route::post('/jobs/sync-google-sheets', [JobController::class, 'syncToGoogleSheets']);
-    
-    // Job Trash (Riwayat)
-    Route::get('/jobs-trash', [JobController::class, 'trash']);
-    Route::post('/jobs/{id}/restore', [JobController::class, 'restore']);
-    Route::delete('/jobs/{id}/force', [JobController::class, 'forceDelete']);
+    // Google Sheets
+    Route::get('/sheets/status', [GoogleSheetController::class, 'status']);
+    Route::post('/sheets/sync-history-jobs', [GoogleSheetController::class, 'syncHistoryJobs']);
+    Route::post('/sheets/sync-tools', [GoogleSheetController::class, 'syncTools']);
+    Route::post('/sheets/sync-all', [GoogleSheetController::class, 'syncAll']);
 
-    // Users
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/field-engineers', [UserController::class, 'getFieldEngineers']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
-    Route::post('/users/{id}/change-password', [UserController::class, 'changePassword']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    // History Jobs
+    Route::get('/history-jobs', [HistoryJobController::class, 'index']);
+    Route::get('/history-jobs/{id}', [HistoryJobController::class, 'show']);
+    Route::post('/history-jobs', [HistoryJobController::class, 'store']);
+    Route::put('/history-jobs/{id}', [HistoryJobController::class, 'update']);
+    Route::delete('/history-jobs/{id}', [HistoryJobController::class, 'destroy']);
+    Route::post('/history-jobs/{id}/photos', [HistoryJobController::class, 'uploadPhoto']);
+    Route::delete('/history-jobs/{id}/photos/{photoId}', [HistoryJobController::class, 'deletePhoto']);
 
-    // ODP Master Data
-    Route::get('/odps', [OdpController::class, 'index']);
-    Route::get('/odps/areas', [OdpController::class, 'getAreas']);
-    Route::get('/odps/select', [OdpController::class, 'getForSelect']);
-    Route::get('/odps/statistics', [OdpController::class, 'statistics']);
-    Route::get('/odps/{odp}', [OdpController::class, 'show']);
-    Route::post('/odps', [OdpController::class, 'store']);
-    Route::put('/odps/{odp}', [OdpController::class, 'update']);
-    Route::delete('/odps/{odp}', [OdpController::class, 'destroy']);
+    // Tool Data Management - Non-ID routes OUTSIDE prefix for clarity
+    Route::post('/tool-data/scan-qr', [ToolDataController::class, 'scanCustomQR']);
+    Route::get('/tool-data/statistics', [ToolDataController::class, 'getStatistics']);
+    Route::get('/tool-data/monthly-update-status', [ToolDataController::class, 'getMonthlyUpdateStatus']);
+    Route::post('/tool-data/generate-recaps', [ToolDataController::class, 'generateRecaps']);
+    Route::get('/tool-data/generate-code', [ToolDataController::class, 'generateToolCode']);
+    Route::post('/tool-data/{id}/update-instant', [ToolDataController::class, 'updateToolInstant']);
+
+    // QR Code endpoints for tools
+    Route::get('/tool-data/{id}/qr-code', [ToolDataController::class, 'getQRCode'])->where('id', '[0-9]+');
+    Route::get('/tool-data/{id}/qr-code/download', [ToolDataController::class, 'downloadQRCode'])->where('id', '[0-9]+');
+
+    // QR Code Generation
+    Route::get('/qr-code/{id}/svg', [QRCodeController::class, 'generateQRSvg']);
+    Route::get('/qr-code/{id}/identifier', [QRCodeController::class, 'getQRIdentifier']);
+
+    // Tool Data Management - ID-based routes
+    Route::prefix('tool-data')->group(function () {
+        Route::get('/', [ToolDataController::class, 'index']);
+        Route::post('/', [ToolDataController::class, 'store']);
+        Route::get('/{id}', [ToolDataController::class, 'show'])->where('id', '[0-9]+');
+        Route::put('/{id}', [ToolDataController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('/{id}', [ToolDataController::class, 'destroy'])->where('id', '[0-9]+');
+        Route::get('/{id}/history', [ToolDataController::class, 'getHistory'])->where('id', '[0-9]+');
+        Route::get('/{id}/rekap-bulanan', [ToolDataController::class, 'getMonthlyRecaps'])->where('id', '[0-9]+');
+    });
+
+    // Tools Management
+    Route::prefix('tools')->group(function () {
+        Route::get('/', [ToolController::class, 'index']);
+        Route::post('/', [ToolController::class, 'store']);
+        Route::get('/{id}', [ToolController::class, 'show']);
+        Route::put('/{id}', [ToolController::class, 'update']);
+        Route::delete('/{id}', [ToolController::class, 'destroy']);
+    });
 });
-

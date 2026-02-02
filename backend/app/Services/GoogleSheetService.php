@@ -6,6 +6,8 @@ use Google\Client;
 use Google\Service\Sheets;
 use Google\Service\Sheets\ValueRange;
 use App\Models\Job;
+use App\Models\HistoryJob;
+use App\Models\Tool;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSheetService
@@ -14,10 +16,14 @@ class GoogleSheetService
     protected $service;
     protected $spreadsheetId;
 
+    // Sheet names
+    const SHEET_HISTORY_JOBS = 'History Jobs';
+    const SHEET_TOOLS = 'Tools';
+
     public function __construct()
     {
         $this->spreadsheetId = config('services.google.spreadsheet_id');
-        
+
         if ($this->isConfigured()) {
             $this->initializeClient();
         }
@@ -52,7 +58,7 @@ class GoogleSheetService
             $this->client->setScopes([Sheets::SPREADSHEETS]);
             $this->client->setAuthConfig($this->getCredentialsPath());
             $this->client->setAccessType('offline');
-            
+
             $this->service = new Sheets($this->client);
         } catch (\Exception $e) {
             Log::error('Failed to initialize Google Sheets client: ' . $e->getMessage());
@@ -122,15 +128,15 @@ class GoogleSheetService
                 $this->spreadsheetId,
                 'Sheet1!A1:O1'
             );
-            
+
             $values = $response->getValues();
-            
+
             if (empty($values)) {
                 // Add headers
                 $body = new ValueRange([
                     'values' => [$this->getHeaders()]
                 ]);
-                
+
                 $this->service->spreadsheets_values->update(
                     $this->spreadsheetId,
                     'Sheet1!A1:O1',
@@ -138,7 +144,7 @@ class GoogleSheetService
                     ['valueInputOption' => 'RAW']
                 );
             }
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to ensure headers: ' . $e->getMessage());
@@ -156,22 +162,22 @@ class GoogleSheetService
                 $this->spreadsheetId,
                 'Sheet1!A:A'
             );
-            
+
             $values = $response->getValues();
-            
+
             if ($values) {
                 foreach ($values as $index => $row) {
                     $cellValue = isset($row[0]) ? trim((string)$row[0]) : '';
                     $searchValue = trim((string)$jobNo);
-                    
+
                     Log::debug("Comparing row {$index}: '{$cellValue}' vs '{$searchValue}'");
-                    
+
                     if ($cellValue === $searchValue) {
                         return $index + 1; // Row numbers are 1-based
                     }
                 }
             }
-            
+
             return null;
         } catch (\Exception $e) {
             Log::error('Failed to find row by job No: ' . $e->getMessage());
@@ -201,21 +207,21 @@ class GoogleSheetService
 
         try {
             $rowNumber = $this->findRowByJobNo($jobNo);
-            
+
             if ($rowNumber && $rowNumber > 1) {
                 // Clear the row (Google Sheets API doesn't have direct delete)
                 $range = "Sheet1!A{$rowNumber}:O{$rowNumber}";
-                
+
                 $this->service->spreadsheets_values->clear(
                     $this->spreadsheetId,
                     $range,
                     new \Google\Service\Sheets\ClearValuesRequest()
                 );
-                
+
                 Log::info("Job No {$jobNo} deleted from Google Sheets at row {$rowNumber}");
                 return true;
             }
-            
+
             return false;
         } catch (\Exception $e) {
             Log::error('Failed to delete job from Google Sheets: ' . $e->getMessage());
@@ -239,18 +245,18 @@ class GoogleSheetService
                 'Sheet1!A2:O',
                 new \Google\Service\Sheets\ClearValuesRequest()
             );
-            
+
             // Get all jobs ordered by tanggal desc, then no asc
             $jobs = Job::orderBy('tanggal', 'desc')
                 ->orderByRaw('(no + 0) ASC')
                 ->orderBy('created_at', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
-            
+
             if ($jobs->isEmpty()) {
                 return true;
             }
-            
+
             // Group jobs by tanggal
             $grouped = [];
             foreach ($jobs as $job) {
@@ -260,39 +266,39 @@ class GoogleSheetService
                 }
                 $grouped[$dateKey][] = $job;
             }
-            
+
             // Prepare all rows with date headers
             $rows = [$this->getHeaders()];
             $dateHeaderRows = []; // Track which rows are date headers for formatting (1-based, including header row)
-            
+
             foreach ($grouped as $dateKey => $dateJobs) {
                 // Add date header row
                 $date = $dateJobs[0]->tanggal;
                 $dateHeaderRow = $this->createDateHeaderRow($date);
                 $rows[] = $dateHeaderRow;
                 $dateHeaderRows[] = count($rows); // Store row number (1-based, including header row at row 1)
-                
+
                 // Add job rows with relative numbering (1, 2, 3, ...)
                 foreach ($dateJobs as $index => $job) {
                     $rows[] = $this->jobToRow($job, $index + 1);
                 }
             }
-            
+
             // Write all data
             $body = new ValueRange([
                 'values' => $rows
             ]);
-            
+
             $this->service->spreadsheets_values->update(
                 $this->spreadsheetId,
                 'Sheet1!A1:O' . (count($rows)),
                 $body,
                 ['valueInputOption' => 'RAW']
             );
-            
+
             // Apply formatting to date header rows (grey background)
             $this->formatDateHeaderRows($dateHeaderRows);
-            
+
             Log::info('All jobs synced to Google Sheets with date grouping');
             return true;
         } catch (\Exception $e) {
@@ -312,12 +318,12 @@ class GoogleSheetService
 
         try {
             $requests = [];
-            
+
             foreach ($rowNumbers as $rowNum) {
                 // rowNum is 1-based (row 1 = header, row 2 = first data row, etc.)
                 // Convert to 0-based index for Google Sheets API
                 $rowIndex = $rowNum - 1;
-                
+
                 // Merge cells from column B (Tanggal, index 1) to column O (index 14)
                 $requests[] = new \Google\Service\Sheets\Request([
                     'mergeCells' => [
@@ -331,7 +337,7 @@ class GoogleSheetService
                         'mergeType' => 'MERGE_ALL',
                     ],
                 ]);
-                
+
                 // Apply formatting to merged cells
                 $requests[] = new \Google\Service\Sheets\Request([
                     'repeatCell' => [
@@ -364,16 +370,279 @@ class GoogleSheetService
                     ],
                 ]);
             }
-            
+
             if (!empty($requests)) {
                 $batchUpdateRequest = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
                     'requests' => $requests
                 ]);
-                
+
                 $this->service->spreadsheets->batchUpdate($this->spreadsheetId, $batchUpdateRequest);
             }
         } catch (\Exception $e) {
             Log::error('Failed to format date header rows: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ==========================================
+     * HISTORY JOBS SHEET METHODS
+     * ==========================================
+     */
+
+    /**
+     * Get headers for History Jobs sheet
+     */
+    protected function getHistoryJobsHeaders(): array
+    {
+        return [
+            'No',
+            'Tanggal Pekerjaan',
+            'Tipe Job',
+            'Nama Client',
+            'TIKOR/ODP/JB',
+            'Port ODP',
+            'Redaman',
+            'Field Engineer 1',
+            'Field Engineer 2',
+            'Field Engineer 3',
+            'Panjang Kabel',
+            'Detail Action',
+            'Tipe Cut',
+            'TIKOR Cut',
+            'Tipe Kabel',
+            'Keterangan',
+            'Status',
+            'Dibuat Oleh',
+            'Dibuat Pada'
+        ];
+    }
+
+    /**
+     * Convert HistoryJob to row data
+     */
+    protected function historyJobToRow(HistoryJob $job, $rowNo = null): array
+    {
+        return [
+            $rowNo ?? $job->id,
+            $job->tanggal_pekerjaan ? $job->tanggal_pekerjaan->format('d/m/Y') : '',
+            $job->job_type === 'instalasi' ? 'Instalasi' : 'Troubleshooting',
+            $job->nama_client ?? '',
+            $job->tikor_odp_jb ?? '',
+            $job->port_odp ?? '',
+            $job->redaman ?? '',
+            $job->field_engineer_1 ?? '',
+            $job->field_engineer_2 ?? '',
+            $job->field_engineer_3 ?? '',
+            $job->panjang_kabel ?? '',
+            $job->detail_action ?? '',
+            $job->tipe_cut ?? '',
+            $job->tikor_cut ?? '',
+            $job->tipe_kabel ?? '',
+            $job->keterangan ?? '',
+            $job->status ?? '',
+            $job->creator?->name ?? '',
+            $job->created_at ? $job->created_at->format('d/m/Y H:i') : ''
+        ];
+    }
+
+    /**
+     * Sync all history jobs to Google Sheets
+     */
+    public function syncHistoryJobs(): bool
+    {
+        if (!$this->isConfigured() || !$this->service) {
+            Log::warning('Google Sheets not configured');
+            return false;
+        }
+
+        try {
+            $this->ensureSheet(self::SHEET_HISTORY_JOBS);
+
+            // Get all history jobs
+            $jobs = HistoryJob::with('creator')
+                ->orderBy('tanggal_pekerjaan', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Prepare rows
+            $rows = [$this->getHistoryJobsHeaders()];
+            foreach ($jobs as $index => $job) {
+                $rows[] = $this->historyJobToRow($job, $index + 1);
+            }
+
+            // Clear existing data
+            $this->service->spreadsheets_values->clear(
+                $this->spreadsheetId,
+                self::SHEET_HISTORY_JOBS . '!A2:S',
+                new \Google\Service\Sheets\ClearValuesRequest()
+            );
+
+            // Write data
+            $body = new ValueRange(['values' => $rows]);
+            $this->service->spreadsheets_values->update(
+                $this->spreadsheetId,
+                self::SHEET_HISTORY_JOBS . '!A1:S' . count($rows),
+                $body,
+                ['valueInputOption' => 'RAW']
+            );
+
+            Log::info('History jobs synced to Google Sheets successfully');
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to sync history jobs to Google Sheets: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * ==========================================
+     * TOOLS SHEET METHODS
+     * ==========================================
+     */
+
+    /**
+     * Get headers for Tools sheet
+     */
+    protected function getToolsHeaders(): array
+    {
+        return [
+            'No',
+            'Kode Tool',
+            'Nama Tool',
+            'Kategori',
+            'Merek/Tipe',
+            'Nomor Seri',
+            'Kondisi',
+            'Status Kepemilikan',
+            'Field Engineer',
+            'Tanggal Terima',
+            'Tanggal Kalibrasi Terakhir',
+            'Tanggal Maintenance Terakhir',
+            'Catatan/Keterangan',
+            'Dibuat Oleh',
+            'Dibuat Pada'
+        ];
+    }
+
+    /**
+     * Convert Tool to row data
+     */
+    protected function toolToRow(Tool $tool, $rowNo = null): array
+    {
+        $kondisiMap = [
+            'baik' => 'Baik',
+            'rusak' => 'Rusak',
+            'perlu_perbaikan' => 'Perlu Perbaikan',
+            'hilang' => 'Hilang'
+        ];
+
+        return [
+            $rowNo ?? $tool->id,
+            $tool->kode_tool ?? '',
+            $tool->nama_tool ?? '',
+            $tool->kategori ?? '',
+            $tool->merek_tipe ?? '',
+            $tool->nomor_seri ?? '',
+            $kondisiMap[$tool->kondisi] ?? ($tool->kondisi ?? ''),
+            $tool->status_kepemilikan ?? '',
+            $tool->field_engineer_name ?? '',
+            $tool->tanggal_terima ? $tool->tanggal_terima->format('d/m/Y') : '',
+            $tool->tanggal_kalibrasi_terakhir ? $tool->tanggal_kalibrasi_terakhir->format('d/m/Y') : '',
+            $tool->tanggal_maintenance_terakhir ? $tool->tanggal_maintenance_terakhir->format('d/m/Y') : '',
+            $tool->catatan_keterangan ?? '',
+            $tool->creator?->name ?? '',
+            $tool->created_at ? $tool->created_at->format('d/m/Y H:i') : ''
+        ];
+    }
+
+    /**
+     * Sync all tools to Google Sheets
+     */
+    public function syncTools(): bool
+    {
+        if (!$this->isConfigured() || !$this->service) {
+            Log::warning('Google Sheets not configured');
+            return false;
+        }
+
+        try {
+            $this->ensureSheet(self::SHEET_TOOLS);
+
+            // Get all tools
+            $tools = Tool::with('creator')
+                ->orderBy('kode_tool', 'asc')
+                ->get();
+
+            // Prepare rows
+            $rows = [$this->getToolsHeaders()];
+            foreach ($tools as $index => $tool) {
+                $rows[] = $this->toolToRow($tool, $index + 1);
+            }
+
+            // Clear existing data
+            $this->service->spreadsheets_values->clear(
+                $this->spreadsheetId,
+                self::SHEET_TOOLS . '!A2:O',
+                new \Google\Service\Sheets\ClearValuesRequest()
+            );
+
+            // Write data
+            $body = new ValueRange(['values' => $rows]);
+            $this->service->spreadsheets_values->update(
+                $this->spreadsheetId,
+                self::SHEET_TOOLS . '!A1:O' . count($rows),
+                $body,
+                ['valueInputOption' => 'RAW']
+            );
+
+            Log::info('Tools synced to Google Sheets successfully');
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to sync tools to Google Sheets: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Ensure sheet exists in spreadsheet
+     */
+    protected function ensureSheet($sheetName): void
+    {
+        try {
+            $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId);
+            $sheets = $spreadsheet->getSheets();
+
+            $sheetExists = false;
+            foreach ($sheets as $sheet) {
+                if ($sheet->getProperties()->getTitle() === $sheetName) {
+                    $sheetExists = true;
+                    break;
+                }
+            }
+
+            if (!$sheetExists) {
+                // Create new sheet
+                $addSheetRequest = new \Google\Service\Sheets\Request([
+                    'addSheet' => [
+                        'properties' => [
+                            'title' => $sheetName,
+                            'gridProperties' => [
+                                'rowCount' => 1000,
+                                'columnCount' => 20,
+                            ]
+                        ]
+                    ]
+                ]);
+
+                $batchUpdateRequest = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
+                    'requests' => [$addSheetRequest]
+                ]);
+
+                $this->service->spreadsheets->batchUpdate($this->spreadsheetId, $batchUpdateRequest);
+                Log::info("Sheet '{$sheetName}' created successfully");
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to ensure sheet exists: ' . $e->getMessage());
         }
     }
 }
