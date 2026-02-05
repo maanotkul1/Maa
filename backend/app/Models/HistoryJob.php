@@ -36,7 +36,29 @@ class HistoryJob extends Model
         'status',
         'created_by',
         'updated_by',
-        // Wireless Troubleshooting Fields
+        // FO Troubleshooting Fields (simplified)
+        'tanggal_fo',
+        'nama_client_fo',
+        'odp_pop_fo',
+        'suspect_fo',
+        'action_fo',
+        'petugas_fe_fo',
+        'jam_datang_fo',
+        'jam_selesai_fo',
+        'note_fo',
+        // Wireless Troubleshooting Fields (simplified)
+        'tanggal_wireless',
+        'nama_client_wireless',
+        'odp_pop_wireless',
+        'suspect_wireless',
+        'action_wireless',
+        'redaman_signal_wireless',
+        'tipe_kabel_wireless',
+        'petugas_fe_wireless',
+        'jam_datang',
+        'jam_selesai',
+        'note_wireless',
+        // Old wireless fields (keeping for backward compatibility)
         'lokasi_site',
         'area_ruangan',
         'prioritas',
@@ -125,42 +147,57 @@ class HistoryJob extends Model
     }
 
     /**
-     * Generate unique job number
+     * Generate unique job number based on job type
+     * Format:
+     * - Instalasi: J + YYMM + Counter (e.g., J26020, J26021, J26022)
+     * - Troubleshooting FO: TF + YYMM + Counter (e.g., TF26020, TF26021, TF26022)
+     * - Troubleshooting Wireless: TW + YYMM + Counter (e.g., TW26020, TW26021, TW26022)
+     *
+     * If a job is deleted, the next job will reuse the lowest available counter for that month.
+     * Counters reset monthly.
      */
-    public static function generateJobNumber(): string
+    public static function generateJobNumber(?string $jobType = null): string
     {
-        // Format: J + YY + MM + Counter (e.g., J260100)
         $year = now()->format('y');  // 2 digit year (26 for 2026)
         $month = now()->format('m');  // 2 digit month (01, 02, etc)
-        $prefix = 'J' . $year . $month;
 
-        // Find the maximum counter for current year-month
-        $maxCounter = self::where('job_number', 'like', $prefix . '%')
+        // Determine prefix based on job type (without day)
+        if ($jobType === 'troubleshooting_fo') {
+            $prefix = 'TF' . $year . $month;
+        } elseif ($jobType === 'troubleshooting_wireless') {
+            $prefix = 'TW' . $year . $month;
+        } else {
+            // Default for instalasi or null
+            $prefix = 'J' . $year . $month;
+        }
+
+        // Get all existing job numbers for this month (including deleted ones)
+        $existingJobs = self::where('job_number', 'like', $prefix . '%')
             ->withTrashed()
-            ->get()
-            ->map(function ($job) use ($prefix) {
-                $number = str_replace($prefix, '', $job->job_number);
-                return (int) $number;
-            })
-            ->max() ?? 0;
+            ->pluck('job_number')
+            ->toArray();
 
-        $nextCounter = $maxCounter + 1;
+        // Extract counters from existing job numbers
+        $usedCounters = [];
+        foreach ($existingJobs as $jobNum) {
+            $counter = str_replace($prefix, '', $jobNum);
+            if (is_numeric($counter) && strlen($counter) <= 2) {
+                $usedCounters[] = (int) $counter;
+            }
+        }
+
+        // Find the lowest available counter starting from 00
+        $nextCounter = 0;
+        sort($usedCounters);
+        foreach ($usedCounters as $counter) {
+            if ($counter === $nextCounter) {
+                $nextCounter++;
+            } else {
+                break;
+            }
+        }
+
         $jobNumber = $prefix . str_pad($nextCounter, 2, '0', STR_PAD_LEFT);
-
-        // Ensure uniqueness (handle race conditions)
-        $maxAttempts = 10;
-        $attempts = 0;
-        while (self::where('job_number', $jobNumber)->withTrashed()->exists() && $attempts < $maxAttempts) {
-            $nextCounter++;
-            $jobNumber = $prefix . str_pad($nextCounter, 2, '0', STR_PAD_LEFT);
-            $attempts++;
-        }
-
-        // Fallback to timestamp if still not unique
-        if ($attempts >= $maxAttempts) {
-            $jobNumber = $prefix . time();
-        }
-
         return $jobNumber;
     }
 }

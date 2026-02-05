@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache & Redirect</title>
+</head>
+<body>
+    <h1>Clearing cache and localStorage...</h1>
+    <p>Redirecting to application...</p>
+    <script>
+        // Clear all localStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear IndexedDB
+        if (window.indexedDB) {
+            const dbs = ['app-db', 'cache'];
+            dbs.forEach(dbName => {
+                try {
+                    const req = indexedDB.deleteDatabase(dbName);
+                    req.onsuccess = () => console.log(`${dbName} deleted`);
+                } catch(e) {
+                    console.log(`Could not delete ${dbName}`);
+                }
+            });
+        }
+        
+        // Redirect to fresh page
+        setTimeout(() => {
+            window.location.href = 'http://localhost:5174/history-jobs?t=' + Date.now();
+        }, 1000);
+    </script>
+</body>
+</html>

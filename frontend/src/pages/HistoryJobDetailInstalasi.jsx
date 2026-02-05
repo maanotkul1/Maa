@@ -9,6 +9,7 @@ export default function HistoryJobDetailInstalasi() {
   const { user, isAdmin } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     fetchJob();
@@ -24,6 +25,25 @@ export default function HistoryJobDetailInstalasi() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getImageUrl = (photoPath) => {
+    if (!photoPath) return "";
+    
+    // Get base origin from VITE_API_URL or default
+    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    // Remove /api suffix if present
+    baseUrl = baseUrl.replace(/\/api\/?$/, '');
+    
+    if (photoPath.startsWith('http')) {
+      return photoPath;
+    }
+    
+    if (photoPath.startsWith('/storage')) {
+      return `${baseUrl}${photoPath}`;
+    }
+    
+    return `${baseUrl}/storage/${photoPath}`;
   };
 
   if (loading) {
@@ -201,31 +221,41 @@ export default function HistoryJobDetailInstalasi() {
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {job.foto_rumah && (
-                    <div className="group">
+                    <div className="group cursor-pointer" onClick={() => setSelectedImage({ src: getImageUrl(job.foto_rumah), title: 'Foto Rumah' })}>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Rumah
                       </label>
                       <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-yellow-500 transition-all">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_rumah}`}
+                          src={getImageUrl(job.foto_rumah)}
                           alt="Foto Rumah"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Klik untuk memperbesar</p>
                     </div>
                   )}
                   {job.foto_pemasangan && (
-                    <div className="group">
+                    <div className="group cursor-pointer" onClick={() => setSelectedImage({ src: getImageUrl(job.foto_pemasangan), title: 'Foto Pemasangan' })}>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Pemasangan
                       </label>
                       <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-yellow-500 transition-all">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_pemasangan}`}
+                          src={getImageUrl(job.foto_pemasangan)}
                           alt="Foto Pemasangan"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Klik untuk memperbesar</p>
                     </div>
                   )}
                 </div>
@@ -234,6 +264,38 @@ export default function HistoryJobDetailInstalasi() {
           </div>
         </div>
       </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-screen"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+              title="Tutup"
+            >
+              <span className="material-icons text-3xl">close</span>
+            </button>
+            <img
+              src={selectedImage.src}
+              alt={selectedImage.title}
+              className="max-w-4xl max-h-screen w-auto h-auto rounded-lg"
+              onError={(e) => {
+                console.error('Modal image failed to load:', e.target.src);
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23444%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2224%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2218%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+              }}
+            />
+            <p className="text-white text-center mt-4 text-sm">
+              {selectedImage.title}
+            </p>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

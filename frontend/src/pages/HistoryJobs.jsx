@@ -244,8 +244,6 @@ export default function HistoryJobs() {
             </div>
           ) : (
             jobs.map((job) => {
-              const engineerDisplay = job.field_engineer_1 && String(job.field_engineer_1).trim() !== '' ? String(job.field_engineer_1).trim() : '-';
-              
               return (
               <div key={job.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
                 <div className="flex items-start justify-between mb-3">
@@ -308,11 +306,19 @@ export default function HistoryJobs() {
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="material-icons text-gray-400 text-lg mt-0.5">info</span>
-                        <span className="text-gray-600 dark:text-gray-400"><strong>Action:</strong> {job.detail_action ? job.detail_action.substring(0, 50) + '...' : '-'}</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Action:</strong> {job.action_fo ? job.action_fo.substring(0, 50) + '...' : '-'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="material-icons text-gray-400 text-lg">electrical_services</span>
-                        <span className="text-gray-600 dark:text-gray-400"><strong>Tipe Cut:</strong> {job.tipe_cut || '-'}</span>
+                        <span className="material-icons text-gray-400 text-lg">engineering</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Petugas FE:</strong> {job.petugas_fe_fo || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">access_time</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Jam Datang:</strong> {job.jam_datang_fo || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">done_all</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Jam Selesai:</strong> {job.jam_selesai_fo || '-'}</span>
                       </div>
                     </>
                   )}
@@ -321,22 +327,48 @@ export default function HistoryJobs() {
                   {activeTab === 'troubleshooting-wireless' && (
                     <>
                       <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">calendar_today</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Tanggal:</strong> {job.tanggal_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">person</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Nama Client:</strong> {job.nama_client_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <span className="material-icons text-gray-400 text-lg">location_on</span>
-                        <span className="text-gray-600 dark:text-gray-400"><strong>POP:</strong> {job.tikor_odp_jb || '-'}</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>ODP/POP:</strong> {job.odp_pop_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">warning</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Suspect:</strong> {job.suspect_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">build</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Action:</strong> {job.action_wireless || '-'}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="material-icons text-gray-400 text-lg">signal_cellular_4_bar</span>
-                        <span className="text-gray-600 dark:text-gray-400"><strong>Signal:</strong> {job.redaman || '-'}</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Redaman/Signal:</strong> {job.redaman_signal_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">cable</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Tipe Kabel:</strong> {job.tipe_kabel_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">engineering</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Petugas FE:</strong> {job.petugas_fe_wireless || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">access_time</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Jam Datang:</strong> {job.jam_datang || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-gray-400 text-lg">done_all</span>
+                        <span className="text-gray-600 dark:text-gray-400"><strong>Jam Selesai:</strong> {job.jam_selesai || '-'}</span>
                       </div>
                     </>
                   )}
 
-                  <div className="flex items-start gap-2">
-                    <span className="material-icons text-gray-400 text-lg mt-0.5">person</span>
-                    <div className="flex-1 text-gray-600 dark:text-gray-400 text-sm">
-                      <strong>Teknisi:</strong> {engineerDisplay}
-                    </div>
-                  </div>
                   <div className="flex items-center gap-2">
                     <span className="material-icons text-gray-400 text-lg">calendar_today</span>
                     <span className="text-gray-600 dark:text-gray-400">
@@ -402,26 +434,25 @@ export default function HistoryJobs() {
                   {/* Troubleshooting FO Columns */}
                   {activeTab === 'troubleshooting-fo' && (
                     <>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tikor ODP/JB</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Port ODP</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Redaman (dB)</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Detail Action</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tipe Cut</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tikor Cut</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tipe Kabel</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tanggal</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">ODP/POP</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Suspect</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Action</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Petugas FE</th>
                     </>
                   )}
                   
                   {/* Troubleshooting Wireless Columns */}
                   {activeTab === 'troubleshooting-wireless' && (
                     <>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">POP</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Signal</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Catatan</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Tanggal</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">ODP/POP</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Suspect</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Action</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Petugas FE</th>
                     </>
                   )}
                   
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Teknisi</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm">Status</th>
                   <th className={`text-left py-3 px-4 font-medium text-gray-900 dark:text-white text-sm sticky right-0 ${
                     activeTab === 'instalasi' ? 'bg-yellow-50 dark:bg-gray-700' :
@@ -433,7 +464,7 @@ export default function HistoryJobs() {
               <tbody>
                 {jobs.length === 0 ? (
                   <tr>
-                    <td colSpan={activeTab === 'instalasi' ? 10 : activeTab === 'troubleshooting-fo' ? 13 : 9} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <td colSpan={activeTab === 'instalasi' ? 9 : activeTab === 'troubleshooting-fo' ? 9 : 8} className="text-center py-8 text-gray-500 dark:text-gray-400">
                       Tidak ada history job ditemukan
                     </td>
                   </tr>
@@ -444,7 +475,7 @@ export default function HistoryJobs() {
                         {new Date(job.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 font-mono" title={job.job_number}>
-                        {generateShortCode(job.id, job.created_at, 'J')}
+                        {shortenCode(job.job_number)}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.nama_client}</td>
                       
@@ -461,28 +492,25 @@ export default function HistoryJobs() {
                       {/* Troubleshooting FO Fields */}
                       {activeTab === 'troubleshooting-fo' && (
                         <>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tikor_odp_jb || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.port_odp || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.redaman ? `${job.redaman} dB` : '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.detail_action}>{job.detail_action || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tipe_cut || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tikor_cut || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tipe_kabel || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tanggal_fo || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.odp_pop_fo || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.suspect_fo}>{job.suspect_fo || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.action_fo}>{job.action_fo || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.petugas_fe_fo || '-'}</td>
                         </>
                       )}
                       
                       {/* Troubleshooting Wireless Fields */}
                       {activeTab === 'troubleshooting-wireless' && (
                         <>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tikor_odp_jb || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.redaman || '-'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.catatan_teknisi}>{job.catatan_teknisi || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.tanggal_wireless || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.odp_pop_wireless || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.suspect_wireless}>{job.suspect_wireless || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate" title={job.action_wireless}>{job.action_wireless || '-'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{job.petugas_fe_wireless || '-'}</td>
                         </>
                       )}
                       
-                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
-                        {job.field_engineer_1 && String(job.field_engineer_1).trim() !== '' ? String(job.field_engineer_1).trim() : '-'}
-                      </td>
                       <td className="py-3 px-4 text-sm">
                         <StatusBadge status={job.status} />
                       </td>

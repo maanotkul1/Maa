@@ -19,6 +19,24 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // Do NOT set Content-Type for FormData - let axios handle it
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    } else {
+      // Remove Content-Type for FormData so axios sets boundary correctly
+      delete config.headers['Content-Type'];
+      
+      // Debug logging untuk FormData
+      if (import.meta.env.DEV) {
+        const entries = Array.from(config.data.entries());
+        const fileEntries = entries.filter(([key, value]) => value instanceof File);
+        if (fileEntries.length > 0) {
+          console.log('[API] FormData with files detected:', fileEntries.map(([k, v]) => `${k}: ${v.name}`));
+          console.log('[API] Request will use multipart/form-data');
+        }
+      }
+    }
+    
     // Add cache busting headers for GET requests
     if (config.method === 'get') {
       config.headers['Cache-Control'] = 'no-cache';

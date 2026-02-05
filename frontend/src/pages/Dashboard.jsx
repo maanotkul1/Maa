@@ -60,6 +60,27 @@ export default function Dashboard() {
     );
   }
 
+  // Helper function to get job type label and color
+  const getJobTypeLabel = (jobType) => {
+    const types = {
+      instalasi: { label: 'Instalasi', color: 'purple' },
+      troubleshooting_fo: { label: 'Troubleshooting FO', color: 'cyan' },
+      troubleshooting_wireless: { label: 'Troubleshooting Wireless', color: 'indigo' },
+    };
+    return types[jobType] || { label: jobType, color: 'gray' };
+  };
+
+  const getColorClass = (color) => {
+    const colors = {
+      purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+      cyan: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300',
+      indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300',
+      blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+      gray: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
+    };
+    return colors[color] || colors.gray;
+  };
+
   const summary = data?.summary || {};
   const charts = data?.charts || {};
 
@@ -232,10 +253,13 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={Object.entries(charts.history_jobs_by_type || {}).map(([type, count]) => ({
-                    name: type === 'instalasi' ? 'Instalasi' : 'Troubleshooting',
-                    value: count,
-                  }))}
+                  data={Object.entries(charts.history_jobs_by_type || {}).map(([type, count]) => {
+                    let label = type;
+                    if (type === 'instalasi') label = 'Instalasi';
+                    else if (type === 'troubleshooting_fo') label = 'Troubleshooting FO';
+                    else if (type === 'troubleshooting_wireless') label = 'Troubleshooting Wireless';
+                    return { name: label, value: count };
+                  })}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -293,25 +317,28 @@ export default function Dashboard() {
             {data?.recent_history_jobs?.length === 0 ? (
               <p className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">No history jobs</p>
             ) : (
-              data?.recent_history_jobs?.map((job) => (
-                <Link key={job.id} to={`/history-jobs/${job.id}`}>
-                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="font-mono text-xs text-gray-500 dark:text-gray-400" title={job.job_number}>
-                        {shortenCode(job.job_number)}
-                      </p>
-                      <StatusBadge status={job.status} />
+              data?.recent_history_jobs?.map((job) => {
+                const jobTypeInfo = getJobTypeLabel(job.job_type);
+                return (
+                  <Link key={job.id} to={`/history-jobs/${job.id}`}>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <div className="flex items-start justify-between mb-2">
+                        <p className="font-mono text-xs text-gray-500 dark:text-gray-400" title={job.job_number}>
+                          {shortenCode(job.job_number)}
+                        </p>
+                        <StatusBadge status={job.status} />
+                      </div>
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">{job.nama_client || '-'}</h3>
+                      <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                        <span className={`px-2 py-1 rounded font-semibold ${getColorClass(jobTypeInfo.color)}`}>
+                          {jobTypeInfo.label}
+                        </span>
+                        <span>{job.tanggal_pekerjaan ? new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID') : '-'}</span>
+                      </div>
                     </div>
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">{job.nama_client || '-'}</h3>
-                    <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
-                      <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                        {job.job_type === 'instalasi' ? 'Instalasi' : 'Troubleshooting'}
-                      </span>
-                      <span>{job.tanggal_pekerjaan ? new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID') : '-'}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                );
+              })
             )}
           </div>
           {/* Desktop Table View */}
@@ -327,27 +354,30 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data?.recent_history_jobs?.map((job) => (
-                  <tr key={job.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="py-3 px-4 font-mono text-sm dark:text-gray-300">
-                      <Link to={`/history-jobs/${job.id}`} className="text-primary-600 hover:text-primary-700 dark:text-primary-400">
-                        <span title={job.job_number}>{shortenCode(job.job_number)}</span>
-                      </Link>
-                    </td>
-                    <td className="py-3 px-4 dark:text-white">{job.nama_client || '-'}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                        {job.job_type === 'instalasi' ? 'Instalasi' : 'Troubleshooting'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                      {job.tanggal_pekerjaan ? new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID') : '-'}
-                    </td>
-                  </tr>
-                ))}
+                {data?.recent_history_jobs?.map((job) => {
+                  const jobTypeInfo = getJobTypeLabel(job.job_type);
+                  return (
+                    <tr key={job.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="py-3 px-4 font-mono text-sm dark:text-gray-300">
+                        <Link to={`/history-jobs/${job.id}`} className="text-primary-600 hover:text-primary-700 dark:text-primary-400">
+                          <span title={job.job_number}>{shortenCode(job.job_number)}</span>
+                        </Link>
+                      </td>
+                      <td className="py-3 px-4 dark:text-white">{job.nama_client || '-'}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getColorClass(jobTypeInfo.color)}`}>
+                          {jobTypeInfo.label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={job.status} />
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        {job.tanggal_pekerjaan ? new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID') : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

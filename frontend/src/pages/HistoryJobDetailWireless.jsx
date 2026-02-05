@@ -9,6 +9,7 @@ export default function HistoryJobDetailWireless() {
   const { user, isAdmin } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const peralatanFields = [
     { key: 'peralatan_radio', label: 'Radio' },
@@ -28,6 +29,33 @@ export default function HistoryJobDetailWireless() {
   const fetchJob = async () => {
     try {
       const response = await api.get(`/history-jobs/${id}`);
+      setJob(response.data);
+    } catch (error) {
+      console.error('Error fetching job:', error);
+      alert('Gagal memuat data job');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getImageUrl = (photoPath) => {
+    if (!photoPath) return "";
+    
+    // Get base origin from VITE_API_URL or default
+    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    // Remove /api suffix if present
+    baseUrl = baseUrl.replace(/\/api\/?$/, '');
+    
+    if (photoPath.startsWith('http')) {
+      return photoPath;
+    }
+    
+    if (photoPath.startsWith('/storage')) {
+      return `${baseUrl}${photoPath}`;
+    }
+    
+    return `${baseUrl}/storage/${photoPath}`;
+  };
       let jobData = response.data;
       
       // Convert string "0"/"1" to boolean for equipment fields
@@ -133,169 +161,160 @@ export default function HistoryJobDetailWireless() {
                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   Nama Client
                 </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">{job.nama_client}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{job.nama_client_wireless}</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Teknisi
-                </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {job.field_engineer_1 && String(job.field_engineer_1).trim() !== '' ? String(job.field_engineer_1).trim() : '-'}
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Tanggal Pekerjaan
-                </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID')}
-                </p>
-              </div>
-              {job.tikor_odp_jb && String(job.tikor_odp_jb).trim() !== '' && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    POP
-                  </label>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{String(job.tikor_odp_jb).trim()}</p>
-                </div>
-              )}
-              {job.redaman && String(job.redaman).trim() !== '' && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Signal (dB)
-                  </label>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{String(job.redaman).trim()}</p>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Wireless Specific Data */}
-          <div className="px-4 lg:px-6 py-6 space-y-8">
-            {/* Catatan Teknisi */}
-            {job.catatan_teknisi && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="material-icons text-purple-600 dark:text-purple-400">note</span>
-                  Catatan Teknisi
-                </h2>
-                <div className="bg-purple-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-purple-500">
-                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{job.catatan_teknisi}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Lokasi & Area */}
-            {(job.lokasi_site || job.area_ruangan) && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="material-icons text-orange-600 dark:text-orange-400">location_on</span>
-                  Lokasi & Area
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {job.lokasi_site && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        📍 Lokasi Site
-                      </label>
-                      <div className="bg-orange-50 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-orange-500">
-                        <p className="text-gray-900 dark:text-white">{job.lokasi_site}</p>
-                      </div>
-                    </div>
-                  )}
-                  {job.area_ruangan && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        🏢 Area Ruangan
-                      </label>
-                      <div className="bg-orange-50 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-orange-500">
-                        <p className="text-gray-900 dark:text-white">{job.area_ruangan}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Peralatan yang Digunakan */}
-            {peralatanFields.some(field => job[field.key]) && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                  <span className="material-icons text-purple-600 dark:text-purple-400">construction</span>
-                  Kerusakan
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {peralatanFields.map(field => 
-                    job[field.key] ? (
-                      <div key={field.key} className="bg-green-50 dark:bg-green-900 p-4 rounded-lg border-2 border-green-500 flex items-center gap-3">
-                        <span className="material-icons text-green-600 dark:text-green-400">check_circle</span>
-                        <span className="font-semibold text-green-700 dark:text-green-300">{field.label}</span>
-                      </div>
-                    ) : null
-                  )}
-                </div>
-
-                {/* Peralatan Lainnya Keterangan */}
-                {job.peralatan_lainnya && job.peralatan_lainnya_keterangan && (
-                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      📝 Keterangan Peralatan Lainnya
+          <div className="px-4 lg:px-6 py-8 space-y-8">
+            {/* Informasi Teknis Wireless */}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="material-icons text-purple-600 dark:text-purple-400">router</span>
+                Informasi Teknis Wireless
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {job.tanggal_wireless && (
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-purple-200 dark:border-purple-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-3">
+                      📅 Tanggal Pekerjaan
                     </label>
-                    <div className="bg-purple-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-purple-500">
-                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{job.peralatan_lainnya_keterangan}</p>
-                    </div>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{new Date(job.tanggal_wireless).toLocaleDateString('id-ID')}</p>
+                  </div>
+                )}
+                {job.nama_client_wireless && (
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide mb-3">
+                      👤 Nama Client
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.nama_client_wireless}</p>
+                  </div>
+                )}
+                {job.odp_pop_wireless && (
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-green-200 dark:border-green-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-green-700 dark:text-green-300 uppercase tracking-wide mb-3">
+                      📍 ODP/POP
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.odp_pop_wireless}</p>
+                  </div>
+                )}
+                {job.suspect_wireless && (
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-orange-200 dark:border-orange-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-orange-700 dark:text-orange-300 uppercase tracking-wide mb-3">
+                      🔍 Suspect/Penyebab
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.suspect_wireless}</p>
+                  </div>
+                )}
+                {job.action_wireless && (
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-red-200 dark:border-red-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-red-700 dark:text-red-300 uppercase tracking-wide mb-3">
+                      ⚙️ Action/Tindakan
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.action_wireless}</p>
+                  </div>
+                )}
+                {job.redaman_signal_wireless && (
+                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-indigo-200 dark:border-indigo-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide mb-3">
+                      📊 Redaman/Signal
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.redaman_signal_wireless}</p>
+                  </div>
+                )}
+                {job.tipe_kabel_wireless && (
+                  <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-pink-200 dark:border-pink-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-pink-700 dark:text-pink-300 uppercase tracking-wide mb-3">
+                      🔌 Tipe Kabel
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.tipe_kabel_wireless}</p>
+                  </div>
+                )}
+                {job.petugas_fe_wireless && (
+                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-cyan-200 dark:border-cyan-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide mb-3">
+                      👨‍🔧 Petugas FE
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.petugas_fe_wireless}</p>
+                  </div>
+                )}
+                {job.jam_datang && (
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-yellow-200 dark:border-yellow-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-yellow-700 dark:text-yellow-300 uppercase tracking-wide mb-3">
+                      🕐 Jam Datang
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.jam_datang}</p>
+                  </div>
+                )}
+                {job.jam_selesai && (
+                  <div className="bg-gradient-to-br from-lime-50 to-lime-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-xl border border-lime-200 dark:border-lime-700 hover:shadow-md transition-shadow">
+                    <label className="block text-xs font-bold text-lime-700 dark:text-lime-300 uppercase tracking-wide mb-3">
+                      🕒 Jam Selesai
+                    </label>
+                    <p className="text-gray-900 dark:text-white font-semibold text-lg">{job.jam_selesai}</p>
                   </div>
                 )}
               </div>
-            )}
+            </div>
 
-            {/* Catatan Umum */}
-            {job.keterangan && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+            {/* Note Wireless */}
+            {job.note_wireless && (
+              <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="material-icons text-blue-600 dark:text-blue-400">description</span>
-                  Keterangan Umum
+                  <span className="material-icons text-blue-600 dark:text-blue-400">note</span>
+                  Catatan & Keterangan
                 </h2>
-                <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-blue-500">
-                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{job.keterangan}</p>
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-600 p-5 rounded-xl border border-blue-200 dark:border-blue-700">
+                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed font-medium">{job.note_wireless}</p>
                 </div>
               </div>
             )}
 
             {/* Photos */}
             {(job.foto_rumah || job.foto_pemasangan) && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+              <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-icons text-indigo-600 dark:text-indigo-400">image</span>
                   Dokumentasi Foto
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {job.foto_rumah && (
-                    <div className="group">
+                    <div className="group cursor-pointer" onClick={() => setSelectedImage({ src: getImageUrl(job.foto_rumah), title: 'Foto Site' })}>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Site
                       </label>
-                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-purple-500 transition-all">
+                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-indigo-500 transition-all shadow-md hover:shadow-lg">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_rumah}`}
+                          src={getImageUrl(job.foto_rumah)}
                           alt="Foto Site"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Klik untuk memperbesar</p>
                     </div>
                   )}
                   {job.foto_pemasangan && (
-                    <div className="group">
+                    <div className="group cursor-pointer" onClick={() => setSelectedImage({ src: getImageUrl(job.foto_pemasangan), title: 'Foto Troubleshooting' })}>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Troubleshooting
                       </label>
-                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-purple-500 transition-all">
+                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-indigo-500 transition-all shadow-md hover:shadow-lg">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_pemasangan}`}
+                          src={getImageUrl(job.foto_pemasangan)}
                           alt="Foto Troubleshooting"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Klik untuk memperbesar</p>
                     </div>
                   )}
                 </div>
@@ -304,6 +323,38 @@ export default function HistoryJobDetailWireless() {
           </div>
         </div>
       </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-screen"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+              title="Tutup"
+            >
+              <span className="material-icons text-3xl">close</span>
+            </button>
+            <img
+              src={selectedImage.src}
+              alt={selectedImage.title}
+              className="max-w-4xl max-h-screen w-auto h-auto rounded-lg"
+              onError={(e) => {
+                console.error('Modal image failed to load:', e.target.src);
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23444%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2224%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2218%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+              }}
+            />
+            <p className="text-white text-center mt-4 text-sm">
+              {selectedImage.title}
+            </p>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

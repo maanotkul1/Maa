@@ -4,30 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import MainLayout from '../components/Layout/MainLayout';
 
-const KELUHAN_OPTIONS = [
-  { value: 'wifi_lambat', label: '🐢 WiFi Lambat' },
-  { value: 'sinyal_lemah', label: '📶 Sinyal Lemah' },
-  { value: 'tidak_bisa_connect', label: '❌ Tidak Bisa Connect' },
-  { value: 'disconnect_berulang', label: '🔄 Disconnect Berulang' },
-  { value: 'tidak_dapat_ip', label: '🔌 Tidak Dapat IP' },
-  { value: 'no_internet_access', label: '🌐 No Internet Access' },
-  { value: 'interference_channel', label: '📡 Interference/Channel' },
-  { value: 'overload_client', label: '👥 Overload Client' },
-];
-
-const TINDAKAN_OPTIONS = [
-  { value: 'restart_device', label: '🔄 Restart Device' },
-  { value: 'change_channel', label: '📊 Change Channel' },
-  { value: 'change_channel_width', label: '📏 Change Channel Width' },
-  { value: 'adjust_power', label: '⚡ Adjust Power' },
-  { value: 're_position_ap', label: '📍 Re-position AP' },
-  { value: 'reconfigure_ssid', label: '📝 Reconfigure SSID' },
-  { value: 'firmware_update', label: '💾 Firmware Update' },
-  { value: 'reset_interface', label: '🔧 Reset Interface' },
-  { value: 'penambahan_ap', label: '➕ Penambahan AP' },
-  { value: 'penggantian_perangkat', label: '🔄 Penggantian Perangkat' },
-];
-
 export default function EditHistoryJob() {
   const { id } = useParams();
   const { user, isAdmin } = useAuth();
@@ -35,7 +11,6 @@ export default function EditHistoryJob() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     job_type: 'instalasi',
-    kategori_job: 'troubleshooting_fo',
     nama_client: '',
     tikor_odp_jb: '',
     port_odp: '',
@@ -50,52 +25,26 @@ export default function EditHistoryJob() {
     keterangan: '',
     foto_rumah: null,
     foto_pemasangan: null,
-    // Wireless Troubleshooting Fields
-    lokasi_site: '',
-    area_ruangan: '',
-    prioritas: 'medium',
-    tanggal_waktu_pengerjaan: '',
-    jenis_perangkat: 'access_point',
-    brand_perangkat: '',
-    model_perangkat: '',
-    ip_address_perangkat: '',
-    ssid: '',
-    interface_radio: '2_4ghz',
-    mac_address: '',
-    keluhan_list: [],
-    keluhan_detail: '',
-    signal_strength_rssi: '',
-    channel: '',
-    channel_width: '',
-    jumlah_client: '',
-    status_dhcp: 'not_checked',
-    ping_latency: '',
-    packet_loss: '',
-    interference: '',
-    authentication_issue: '',
-    log_error: '',
-    tindakan_list: [],
-    detail_tindakan_wireless: '',
-    status_koneksi_wireless: 'unknown',
-    status_internet: 'unknown',
-    kondisi_setelah_tindakan: '',
-    feedback_user: '',
-    status_akhir: 'solved',
-    escalation_reason: '',
-    escalated_to: '',
-    catatan_teknisi: '',
-    rekomendasi_jangka_panjang: '',
-    rencana_tindak_lanjut: '',
-    // Equipment fields for simplified wireless troubleshooting
-    peralatan_radio: false,
-    peralatan_kabel: false,
-    peralatan_adaptor: false,
-    peralatan_poe: false,
-    peralatan_rj45: false,
-    peralatan_router_switch: false,
-    peralatan_ap: false,
-    peralatan_lainnya: false,
-    peralatan_lainnya_keterangan: '',
+    tanggal_wireless: '',
+    nama_client_wireless: '',
+    odp_pop_wireless: '',
+    suspect_wireless: '',
+    action_wireless: '',
+    redaman_signal_wireless: '',
+    tipe_kabel_wireless: '',
+    petugas_fe_wireless: '',
+    jam_datang: '',
+    jam_selesai: '',
+    note_wireless: '',
+    tanggal_fo: '',
+    nama_client_fo: '',
+    odp_pop_fo: '',
+    suspect_fo: '',
+    action_fo: '',
+    petugas_fe_fo: '',
+    jam_datang_fo: '',
+    jam_selesai_fo: '',
+    note_fo: '',
   });
 
   useEffect(() => {
@@ -108,7 +57,6 @@ export default function EditHistoryJob() {
       const job = response.data;
       setFormData({
         job_type: job.job_type,
-        kategori_job: job.kategori_job || 'troubleshooting_fo',
         nama_client: job.nama_client || '',
         tikor_odp_jb: job.tikor_odp_jb || '',
         port_odp: job.port_odp || '',
@@ -121,52 +69,28 @@ export default function EditHistoryJob() {
         tikor_cut: job.tikor_cut || '',
         tipe_kabel: job.tipe_kabel || '',
         keterangan: job.keterangan || '',
-        foto_rumah: null,
-        foto_pemasangan: null,
-        // Wireless fields
-        lokasi_site: job.lokasi_site || '',
-        area_ruangan: job.area_ruangan || '',
-        prioritas: job.prioritas || 'medium',
-        tanggal_waktu_pengerjaan: job.tanggal_waktu_pengerjaan || '',
-        jenis_perangkat: job.jenis_perangkat || 'access_point',
-        brand_perangkat: job.brand_perangkat || '',
-        model_perangkat: job.model_perangkat || '',
-        ip_address_perangkat: job.ip_address_perangkat || '',
-        ssid: job.ssid || '',
-        interface_radio: job.interface_radio || '2_4ghz',
-        mac_address: job.mac_address || '',
-        keluhan_list: job.keluhan_list ? (Array.isArray(job.keluhan_list) ? job.keluhan_list : JSON.parse(job.keluhan_list)) : [],
-        keluhan_detail: job.keluhan_detail || '',
-        signal_strength_rssi: job.signal_strength_rssi || '',
-        channel: job.channel || '',
-        channel_width: job.channel_width || '',
-        jumlah_client: job.jumlah_client || '',
-        status_dhcp: job.status_dhcp || 'not_checked',
-        ping_latency: job.ping_latency || '',
-        packet_loss: job.packet_loss || '',
-        interference: job.interference || '',
-        authentication_issue: job.authentication_issue || '',
-        log_error: job.log_error || '',
-        tindakan_list: job.tindakan_list ? (Array.isArray(job.tindakan_list) ? job.tindakan_list : JSON.parse(job.tindakan_list)) : [],
-        detail_tindakan_wireless: job.detail_tindakan_wireless || '',
-        status_koneksi_wireless: job.status_koneksi_wireless || 'unknown',
-        status_internet: job.status_internet || 'unknown',
-        kondisi_setelah_tindakan: job.kondisi_setelah_tindakan || '',
-        feedback_user: job.feedback_user || '',
-        status_akhir: job.status_akhir || 'solved',
-        escalation_reason: job.escalation_reason || '',
-        escalated_to: job.escalated_to || '',
-        catatan_teknisi: job.catatan_teknisi || '',
-        rekomendasi_jangka_panjang: job.rekomendasi_jangka_panjang || '',
-        rencana_tindak_lanjut: job.rencana_tindak_lanjut || '',
-        // Equipment fields
-        peralatan_radio: job.peralatan_radio ? true : false,
-        peralatan_kabel: job.peralatan_kabel ? true : false,
-        peralatan_adaptor: job.peralatan_adaptor ? true : false,
-        peralatan_poe: job.peralatan_poe ? true : false,
-        peralatan_rj45: job.peralatan_rj45 ? true : false,
-        peralatan_router_switch: job.peralatan_router_switch ? true : false,
-        peralatan_ap: job.peralatan_ap ? true : false,
+        foto_rumah: job.foto_rumah || null,
+        foto_pemasangan: job.foto_pemasangan || null,
+        tanggal_wireless: job.tanggal_wireless || '',
+        nama_client_wireless: job.nama_client_wireless || '',
+        odp_pop_wireless: job.odp_pop_wireless || '',
+        suspect_wireless: job.suspect_wireless || '',
+        action_wireless: job.action_wireless || '',
+        redaman_signal_wireless: job.redaman_signal_wireless || '',
+        tipe_kabel_wireless: job.tipe_kabel_wireless || '',
+        petugas_fe_wireless: job.petugas_fe_wireless || '',
+        jam_datang: job.jam_datang || '',
+        jam_selesai: job.jam_selesai || '',
+        note_wireless: job.note_wireless || '',
+        tanggal_fo: job.tanggal_fo || '',
+        nama_client_fo: job.nama_client_fo || '',
+        odp_pop_fo: job.odp_pop_fo || '',
+        suspect_fo: job.suspect_fo || '',
+        action_fo: job.action_fo || '',
+        petugas_fe_fo: job.petugas_fe_fo || '',
+        jam_datang_fo: job.jam_datang_fo || '',
+        jam_selesai_fo: job.jam_selesai_fo || '',
+        note_fo: job.note_fo || '',
       });
     } catch (error) {
       console.error('Error fetching job:', error);
@@ -176,20 +100,12 @@ export default function EditHistoryJob() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (files) {
+    if (files && files.length > 0) {
+      console.log(`File selected for ${name}:`, files[0].name, files[0].size);
       setFormData({ ...formData, [name]: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
     }
-  };
-
-  const handleCheckboxChange = (fieldName, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: prev[fieldName].includes(value)
-        ? prev[fieldName].filter(item => item !== value)
-        : [...prev[fieldName], value]
-    }));
   };
 
   const handleSubmit = async (e) => {
@@ -200,64 +116,58 @@ export default function EditHistoryJob() {
       const submitData = new FormData();
       
       submitData.append('job_type', formData.job_type);
-      submitData.append('kategori_job', formData.kategori_job || '');
-      submitData.append('nama_client', formData.nama_client);
-      submitData.append('field_engineer_1', formData.field_engineer || '');
-      submitData.append('tanggal_pekerjaan', formData.tanggal_pekerjaan);
-      if (formData.keterangan) submitData.append('keterangan', formData.keterangan);
-
-      // Conditional fields based on job type and category
-      if (formData.job_type === 'instalasi' || 
-          (formData.job_type === 'troubleshooting' && formData.kategori_job === 'troubleshooting_fo')) {
-        // For Instalasi and Troubleshooting FO
+      
+      if (formData.job_type === 'instalasi') {
+        // INSTALASI
+        submitData.append('nama_client', formData.nama_client);
+        submitData.append('field_engineer_1', formData.field_engineer || '');
+        submitData.append('tanggal_pekerjaan', formData.tanggal_pekerjaan);
+        submitData.append('keterangan', formData.keterangan || '');
         submitData.append('tikor_odp_jb', formData.tikor_odp_jb || '');
         submitData.append('port_odp', formData.port_odp || '');
-        if (formData.redaman) submitData.append('redaman', formData.redaman);
-      } else {
-        // For Troubleshooting Wireless
-        if (formData.port_odp) submitData.append('port_odp', formData.port_odp); // POP is optional
-        if (formData.redaman) submitData.append('redaman', formData.redaman); // Signal is optional
-      }
-
-      if (formData.job_type === 'instalasi') {
-        if (formData.panjang_kabel) submitData.append('panjang_kabel', formData.panjang_kabel);
-      } else if (formData.job_type === 'troubleshooting') {
-        if (formData.kategori_job === 'troubleshooting_fo') {
-          if (formData.detail_action) submitData.append('detail_action', formData.detail_action);
-          if (formData.tipe_cut) submitData.append('tipe_cut', formData.tipe_cut);
-          if (formData.tikor_cut) submitData.append('tikor_cut', formData.tikor_cut);
-          if (formData.tipe_kabel) submitData.append('tipe_kabel', formData.tipe_kabel);
-        } else {
-          // Wireless troubleshooting (simplified)
-          submitData.append('lokasi_site', formData.lokasi_site || '');
-          submitData.append('area_ruangan', formData.area_ruangan || '');
-          submitData.append('prioritas', formData.prioritas || 'medium');
-          submitData.append('tanggal_waktu_pengerjaan', formData.tanggal_waktu_pengerjaan || '');
-          submitData.append('catatan_teknisi', formData.catatan_teknisi || '');
-          
-          // Equipment fields
-          submitData.append('peralatan_radio', formData.peralatan_radio ? '1' : '0');
-          submitData.append('peralatan_kabel', formData.peralatan_kabel ? '1' : '0');
-          submitData.append('peralatan_adaptor', formData.peralatan_adaptor ? '1' : '0');
-          submitData.append('peralatan_poe', formData.peralatan_poe ? '1' : '0');
-          submitData.append('peralatan_rj45', formData.peralatan_rj45 ? '1' : '0');
-          submitData.append('peralatan_router_switch', formData.peralatan_router_switch ? '1' : '0');
-          submitData.append('peralatan_ap', formData.peralatan_ap ? '1' : '0');
-          submitData.append('peralatan_lainnya', formData.peralatan_lainnya ? '1' : '0');
-          if (formData.peralatan_lainnya_keterangan) {
-            submitData.append('peralatan_lainnya_keterangan', formData.peralatan_lainnya_keterangan);
-          }
-        }
+        submitData.append('redaman', formData.redaman || '');
+        submitData.append('panjang_kabel', formData.panjang_kabel || '');
+        
+      } else if (formData.job_type === 'troubleshooting_fo') {
+        // TROUBLESHOOTING FO - new simplified fields
+        submitData.append('tanggal_fo', formData.tanggal_fo || '');
+        submitData.append('nama_client_fo', formData.nama_client_fo || '');
+        submitData.append('odp_pop_fo', formData.odp_pop_fo || '');
+        submitData.append('suspect_fo', formData.suspect_fo || '');
+        submitData.append('action_fo', formData.action_fo || '');
+        submitData.append('petugas_fe_fo', formData.petugas_fe_fo || '');
+        submitData.append('jam_datang_fo', formData.jam_datang_fo || '');
+        submitData.append('jam_selesai_fo', formData.jam_selesai_fo || '');
+        submitData.append('note_fo', formData.note_fo || '');
+        
+      } else if (formData.job_type === 'troubleshooting_wireless') {
+        // TROUBLESHOOTING WIRELESS - new simplified fields (NO common fields)
+        submitData.append('tanggal_wireless', formData.tanggal_wireless || '');
+        submitData.append('nama_client_wireless', formData.nama_client_wireless || '');
+        submitData.append('odp_pop_wireless', formData.odp_pop_wireless || '');
+        submitData.append('suspect_wireless', formData.suspect_wireless || '');
+        submitData.append('action_wireless', formData.action_wireless || '');
+        submitData.append('redaman_signal_wireless', formData.redaman_signal_wireless || '');
+        submitData.append('tipe_kabel_wireless', formData.tipe_kabel_wireless || '');
+        submitData.append('petugas_fe_wireless', formData.petugas_fe_wireless || '');
+        submitData.append('jam_datang', formData.jam_datang || '');
+        submitData.append('jam_selesai', formData.jam_selesai || '');
+        submitData.append('note_wireless', formData.note_wireless || '');
       }
 
       if (formData.foto_rumah && typeof formData.foto_rumah !== 'string') submitData.append('foto_rumah', formData.foto_rumah);
       if (formData.foto_pemasangan && typeof formData.foto_pemasangan !== 'string') submitData.append('foto_pemasangan', formData.foto_pemasangan);
 
-      await api.put(`/history-jobs/${id}`, submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      console.log('Submit FormData contents:');
+      for (let pair of submitData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`  ${pair[0]}: [File] ${pair[1].name} (${pair[1].size} bytes)`);
+        } else {
+          console.log(`  ${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      await api.put(`/history-jobs/${id}`, submitData);
 
       navigate('/history-jobs');
     } catch (error) {
@@ -300,202 +210,153 @@ export default function EditHistoryJob() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
               required
             >
-              <option value="instalasi">Instalasi</option>
-              <option value="troubleshooting">Troubleshooting</option>
+              <option value="instalasi">🏠 Instalasi</option>
+              <option value="troubleshooting_fo">🔌 Troubleshooting FO</option>
+              <option value="troubleshooting_wireless">📡 Troubleshooting Wireless</option>
             </select>
           </div>
 
-          {/* Kategori Job - Troubleshooting */}
-          {formData.job_type === 'troubleshooting' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Kategori Troubleshooting <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="kategori_job"
-                value={formData.kategori_job}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                required
-              >
-                <option value="troubleshooting_fo">🔌 Troubleshooting FO</option>
-                <option value="troubleshooting_wireless">📡 Troubleshooting Wireless</option>
-              </select>
+          {/* Common Fields - hanya untuk instalasi */}
+          {formData.job_type === 'instalasi' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nama Client <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="nama_client"
+                  value={formData.nama_client}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  required
+                />
+              </div>
+
+              {formData.job_type === 'instalasi' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tikor ODP/JB
+                    </label>
+                    <input
+                      type="text"
+                      name="tikor_odp_jb"
+                      value={formData.tikor_odp_jb}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Port ODP
+                    </label>
+                    <input
+                      type="text"
+                      name="port_odp"
+                      value={formData.port_odp}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Redaman (dB)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="redaman"
+                      value={formData.redaman}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.job_type === 'troubleshooting_fo' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tikor ODP/JB
+                    </label>
+                    <input
+                      type="text"
+                      name="tikor_odp_jb"
+                      value={formData.tikor_odp_jb}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Port ODP
+                    </label>
+                    <input
+                      type="text"
+                      name="port_odp"
+                      value={formData.port_odp}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Redaman (dB)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="redaman"
+                      value={formData.redaman}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.job_type === 'instalasi' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Teknisi
+                    </label>
+                    <input
+                      type="text"
+                      name="field_engineer"
+                      value={formData.field_engineer}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tanggal Pekerjaan <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="tanggal_pekerjaan"
+                      value={formData.tanggal_pekerjaan}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          {/* Common Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nama Client <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="nama_client"
-                value={formData.nama_client}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-
-            {formData.job_type === 'instalasi' ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tikor ODP/JB <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="tikor_odp_jb"
-                    value={formData.tikor_odp_jb}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Port ODP <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="port_odp"
-                    value={formData.port_odp}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Redaman (dB)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="redaman"
-                    value={formData.redaman}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </>
-            ) : formData.kategori_job === 'troubleshooting_fo' ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    POP <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="port_odp"
-                    value={formData.port_odp}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Signal
-                  </label>
-                  <input
-                    type="text"
-                    name="redaman"
-                    value={formData.redaman}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    POP <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="tikor_odp_jb"
-                    value={formData.tikor_odp_jb}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Port ODP <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="port_odp"
-                    value={formData.port_odp}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Redaman (dB)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="redaman"
-                    value={formData.redaman}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Teknisi
-              </label>
-              <input
-                type="text"
-                name="field_engineer"
-                value={formData.field_engineer}
-                onChange={handleChange}
-                placeholder="Nama Teknisi"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tanggal Pekerjaan <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="tanggal_pekerjaan"
-                value={formData.tanggal_pekerjaan}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-          </div>
-
           {/* Type-specific Fields */}
-          {formData.job_type === 'instalasi' ? (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Data Instalasi</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {formData.job_type === 'instalasi' && (
+              <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Panjang Kabel (meter)
+                    Panjang Kabel
                   </label>
                   <input
                     type="number"
@@ -506,45 +367,192 @@ export default function EditHistoryJob() {
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
-              </div>
-            </div>
-          ) : formData.kategori_job === 'troubleshooting_fo' ? (
-            // Troubleshooting FO Form
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Data Troubleshooting FO</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </>
+            )}
+
+            {formData.job_type === 'troubleshooting_fo' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tanggal
+                  </label>
+                  <input
+                    type="date"
+                    name="tanggal_fo"
+                    value={formData.tanggal_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nama Client
+                  </label>
+                  <input
+                    type="text"
+                    name="nama_client_fo"
+                    value={formData.nama_client_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    ODP/POP
+                  </label>
+                  <input
+                    type="text"
+                    name="odp_pop_fo"
+                    value={formData.odp_pop_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Suspect
+                  </label>
+                  <input
+                    type="text"
+                    name="suspect_fo"
+                    value={formData.suspect_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Action
+                  </label>
+                  <input
+                    type="text"
+                    name="action_fo"
+                    value={formData.action_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Petugas FE
+                  </label>
+                  <input
+                    type="text"
+                    name="petugas_fe_fo"
+                    value={formData.petugas_fe_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Jam Datang
+                  </label>
+                  <input
+                    type="time"
+                    name="jam_datang_fo"
+                    value={formData.jam_datang_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Jam Selesai
+                  </label>
+                  <input
+                    type="time"
+                    name="jam_selesai_fo"
+                    value={formData.jam_selesai_fo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Detail Action
+                    Note
                   </label>
                   <textarea
-                    name="detail_action"
-                    value={formData.detail_action}
+                    name="note_fo"
+                    value={formData.note_fo}
                     onChange={handleChange}
-                    rows={4}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </>
+            )}
+
+            {formData.job_type === 'troubleshooting_wireless' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tanggal
+                  </label>
+                  <input
+                    type="date"
+                    name="tanggal_wireless"
+                    value={formData.tanggal_wireless}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tipe Cut
+                    Nama Client
                   </label>
                   <input
                     type="text"
-                    name="tipe_cut"
-                    value={formData.tipe_cut}
+                    name="nama_client_wireless"
+                    value={formData.nama_client_wireless}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tikor Cut
+                    ODP/POP
                   </label>
                   <input
                     type="text"
-                    name="tikor_cut"
-                    value={formData.tikor_cut}
+                    name="odp_pop_wireless"
+                    value={formData.odp_pop_wireless}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Suspect
+                  </label>
+                  <input
+                    type="text"
+                    name="suspect_wireless"
+                    value={formData.suspect_wireless}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Action
+                  </label>
+                  <input
+                    type="text"
+                    name="action_wireless"
+                    value={formData.action_wireless}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Redaman/Signal
+                  </label>
+                  <input
+                    type="text"
+                    name="redaman_signal_wireless"
+                    value={formData.redaman_signal_wireless}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
@@ -555,60 +563,63 @@ export default function EditHistoryJob() {
                   </label>
                   <input
                     type="text"
-                    name="tipe_kabel"
-                    value={formData.tipe_kabel}
+                    name="tipe_kabel_wireless"
+                    value={formData.tipe_kabel_wireless}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
-              </div>
-            </div>
-          ) : (
-            // Troubleshooting Wireless - Simplified Form
-            <div className="space-y-6">
-              {/* EQUIPMENT SECTION */}
-              <div className="border-l-4 border-blue-500 pl-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Peralatan Yang Digunakan</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { key: 'peralatan_radio', label: 'Radio' },
-                    { key: 'peralatan_kabel', label: 'Kabel' },
-                    { key: 'peralatan_adaptor', label: 'Adaptor' },
-                    { key: 'peralatan_poe', label: 'PoE (Power over Ethernet)' },
-                    { key: 'peralatan_rj45', label: 'RJ45' },
-                    { key: 'peralatan_router_switch', label: 'Router / Switch' },
-                    { key: 'peralatan_ap', label: 'Access Point (AP)' },
-                  ].map(item => (
-                    <label key={item.key} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                      <input 
-                        type="checkbox" 
-                        checked={formData[item.key]} 
-                        onChange={(e) => setFormData({ ...formData, [item.key]: e.target.checked })}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* CATATAN SECTION */}
-              <div className="border-l-4 border-green-500 pl-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Catatan Pekerjaan</h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan Teknisi</label>
-                  <textarea 
-                    name="catatan_teknisi" 
-                    value={formData.catatan_teknisi} 
-                    onChange={handleChange} 
-                    rows={4} 
-                    placeholder="Tulis catatan hasil pekerjaan dan kondisi di lapangan..."
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" 
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Petugas FE
+                  </label>
+                  <input
+                    type="text"
+                    name="petugas_fe_wireless"
+                    value={formData.petugas_fe_wireless}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
-              </div>
-            </div>
-          )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Jam Datang
+                  </label>
+                  <input
+                    type="time"
+                    name="jam_datang"
+                    value={formData.jam_datang}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Jam Selesai
+                  </label>
+                  <input
+                    type="time"
+                    name="jam_selesai"
+                    value={formData.jam_selesai}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Note
+                  </label>
+                  <textarea
+                    name="note_wireless"
+                    value={formData.note_wireless}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Photos */}
           <div>
@@ -620,6 +631,17 @@ export default function EditHistoryJob() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto Rumah
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_rumah === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_rumah}`}
+                          alt="Current foto_rumah"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_rumah"
@@ -627,11 +649,25 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_rumah && typeof formData.foto_rumah !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_rumah.name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto Pemasangan
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_pemasangan === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_pemasangan}`}
+                          alt="Current foto_pemasangan"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_pemasangan"
@@ -639,14 +675,28 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_pemasangan && typeof formData.foto_pemasangan !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_pemasangan.name}</p>
+                    )}
                   </div>
                 </>
-              ) : formData.kategori_job === 'troubleshooting_wireless' ? (
+              ) : formData.job_type === 'troubleshooting_wireless' ? (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto Before Pengerjaan
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_rumah === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_rumah}`}
+                          alt="Current foto_rumah"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_rumah"
@@ -654,11 +704,25 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_rumah && typeof formData.foto_rumah !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_rumah.name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto After Pengerjaan
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_pemasangan === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_pemasangan}`}
+                          alt="Current foto_pemasangan"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_pemasangan"
@@ -666,6 +730,9 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_pemasangan && typeof formData.foto_pemasangan !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_pemasangan.name}</p>
+                    )}
                   </div>
                 </>
               ) : (
@@ -674,6 +741,17 @@ export default function EditHistoryJob() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto Rumah
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_rumah === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_rumah}`}
+                          alt="Current foto_rumah"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_rumah"
@@ -681,11 +759,25 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_rumah && typeof formData.foto_rumah !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_rumah.name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Foto Pemasangan
                     </label>
+                    {/* Show current photo if exists */}
+                    {typeof formData.foto_pemasangan === 'string' && (
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium mb-2">Foto saat ini:</p>
+                        <img 
+                          src={`http://localhost:8000/storage/${formData.foto_pemasangan}`}
+                          alt="Current foto_pemasangan"
+                          className="max-w-full h-auto max-h-32 rounded"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       name="foto_pemasangan"
@@ -693,25 +785,29 @@ export default function EditHistoryJob() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
                     />
+                    {formData.foto_pemasangan && typeof formData.foto_pemasangan !== 'string' && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ Foto baru dipilih: {formData.foto_pemasangan.name}</p>
+                    )}
                   </div>
                 </>
               )}
             </div>
           </div>
 
-          {/* Keterangan */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Keterangan
-            </label>
-            <textarea
-              name="keterangan"
-              value={formData.keterangan}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
+          {formData.job_type === 'instalasi' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Keterangan
+              </label>
+              <textarea
+                name="keterangan"
+                value={formData.keterangan}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-4">

@@ -33,16 +33,12 @@ class DashboardController extends Controller
         // Calculate history job totals from queries
         $historyJobsByStatus = $historyJobStats->groupBy('status')->map(fn($group) => $group->sum('count'));
         $historyJobsByType = $historyJobStats->groupBy('job_type')->map(fn($group) => $group->sum('count'));
-        $historyJobsByKategori = $historyJobByKategori->groupBy('kategori_job')->map(fn($group) => $group->sum('count'));
 
         $totalHistoryJobs = $historyJobStats->sum('count');
         $historyJobsCompleted = $historyJobsByStatus->get('completed', 0);
         $historyJobsInstalasi = $historyJobsByType->get('instalasi', 0);
-        $historyJobsTroubleshooting = $historyJobsByType->get('troubleshooting', 0);
-        // FO can be from job_type 'troubleshooting_fo' or from kategori_job 'troubleshooting_fo'
-        $historyJobsFO = ($historyJobsByType->get('troubleshooting_fo', 0) + $historyJobsByKategori->get('troubleshooting_fo', 0));
-        // Wireless can be from job_type 'troubleshooting_wireless' or from kategori_job 'troubleshooting_wireless'
-        $historyJobsWireless = ($historyJobsByType->get('troubleshooting_wireless', 0) + $historyJobsByKategori->get('troubleshooting_wireless', 0));
+        $historyJobsFO = $historyJobsByType->get('troubleshooting_fo', 0);
+        $historyJobsWireless = $historyJobsByType->get('troubleshooting_wireless', 0);
 
         // Get all tools from tools_data table and extract kondisi from JSON
         $allTools = DB::table('tools_data')->whereNull('deleted_at')->get();
@@ -98,13 +94,12 @@ class DashboardController extends Controller
             ];
         }
 
-        // Calculate percentages for history jobs (removed pending & cancelled - only completed)
+        // Calculate percentages for history jobs
         $historyJobsPercentages = [];
         if ($totalHistoryJobs > 0) {
             $historyJobsPercentages = [
                 'completed' => round(($historyJobsCompleted / $totalHistoryJobs) * 100, 2),
                 'instalasi' => round(($historyJobsInstalasi / $totalHistoryJobs) * 100, 2),
-                'troubleshooting' => round(($historyJobsTroubleshooting / $totalHistoryJobs) * 100, 2),
                 'fo' => round(($historyJobsFO / $totalHistoryJobs) * 100, 2),
                 'wireless' => round(($historyJobsWireless / $totalHistoryJobs) * 100, 2),
             ];
@@ -121,7 +116,6 @@ class DashboardController extends Controller
                 'total_history_jobs' => $totalHistoryJobs,
                 'history_jobs_completed' => $historyJobsCompleted,
                 'history_jobs_instalasi' => $historyJobsInstalasi,
-                'history_jobs_troubleshooting' => $historyJobsTroubleshooting,
                 'history_jobs_fo' => $historyJobsFO,
                 'history_jobs_wireless' => $historyJobsWireless,
                 'total_tools' => $totalTools,

@@ -112,11 +112,7 @@ export default function ToolsData() {
       // Dokumentasi
       if (formData.foto_tool) submitData.append('foto_tool', formData.foto_tool);
 
-      await api.post('/tool-data', submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await api.post('/tool-data', submitData);
       
       alert('Tools berhasil dibuat');
       setShowModal(false);
@@ -144,7 +140,8 @@ export default function ToolsData() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (files) {
+    if (files && files.length > 0) {
+      console.log(`File selected for ${name}:`, files[0].name, files[0].size);
       setFormData({ ...formData, [name]: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });

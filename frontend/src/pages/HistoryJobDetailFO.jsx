@@ -9,6 +9,7 @@ export default function HistoryJobDetailFO() {
   const { user, isAdmin } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     fetchJob();
@@ -24,6 +25,32 @@ export default function HistoryJobDetailFO() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getImageUrl = (photoPath) => {
+    if (!photoPath) return "";
+    
+    // Get base origin from VITE_API_URL or default
+    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    // Remove /api suffix if present
+    baseUrl = baseUrl.replace(/\/api\/?$/, '');
+    
+    // Jika path sudah dimulai dengan http, return langsung
+    if (photoPath.startsWith('http')) {
+      console.log('Photo URL (http):', photoPath);
+      return photoPath;
+    }
+    
+    // Construct full URL
+    let fullUrl;
+    if (photoPath.startsWith('/storage')) {
+      fullUrl = `${baseUrl}${photoPath}`;
+    } else {
+      fullUrl = `${baseUrl}/storage/${photoPath}`;
+    }
+    
+    console.log('Photo path:', photoPath, 'Full URL:', fullUrl);
+    return fullUrl;
   };
 
   if (loading) {
@@ -90,7 +117,7 @@ export default function HistoryJobDetailFO() {
               <span className="material-icons text-orange-600 dark:text-orange-400">info</span>
               Informasi Umum
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   Tipe Job
@@ -109,52 +136,6 @@ export default function HistoryJobDetailFO() {
                   {job.status === 'pending' && <span className="text-gray-600 dark:text-gray-400">○ Tertunda</span>}
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Nama Client
-                </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">{job.nama_client}</p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Teknisi
-                </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {job.field_engineer_1 && String(job.field_engineer_1).trim() !== '' ? String(job.field_engineer_1).trim() : '-'}
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Tanggal Pekerjaan
-                </label>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {new Date(job.tanggal_pekerjaan).toLocaleDateString('id-ID')}
-                </p>
-              </div>
-              {job.tikor_odp_jb && String(job.tikor_odp_jb).trim() !== '' && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Tikor ODP/JB
-                  </label>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{String(job.tikor_odp_jb).trim()}</p>
-                </div>
-              )}
-              {job.port_odp && String(job.port_odp).trim() !== '' && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Port ODP
-                  </label>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{String(job.port_odp).trim()}</p>
-                </div>
-              )}
-              {job.redaman && String(job.redaman).trim() !== '' && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Redaman (dB)
-                  </label>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{String(job.redaman).trim()}</p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -162,68 +143,97 @@ export default function HistoryJobDetailFO() {
           <div className="px-4 lg:px-6 py-6 space-y-8">
             <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                <span className="material-icons text-orange-600 dark:text-orange-400">router</span>
-                Data Troubleshooting FO
+                <span className="material-icons text-orange-600 dark:text-orange-400">assignment</span>
+                Detail
               </h2>
-              <div className="space-y-6">
-                {job.detail_action && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      📋 Detail Action
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Tanggal Pekerjaan
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {new Date(job.tanggal_fo).toLocaleDateString('id-ID')}
+                  </p>
+                </div>
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Nama Client
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{job.nama_client_fo}</p>
+                </div>
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    ODP/POP
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {job.odp_pop_fo || '-'}
+                  </p>
+                </div>
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Suspect
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {job.suspect_fo || '-'}
+                  </p>
+                </div>
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Action
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {job.action_fo || '-'}
+                  </p>
+                </div>
+                <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border border-orange-200 dark:border-gray-600">
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Petugas FE
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {job.petugas_fe_fo || '-'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Waktu Section */}
+              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="material-icons text-blue-600 dark:text-blue-400">schedule</span>
+                  Waktu
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg border border-blue-200 dark:border-gray-600">
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                      Jam Datang
                     </label>
-                    <div className="bg-orange-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-orange-500">
-                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{job.detail_action}</p>
-                    </div>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {job.jam_datang_fo || '-'}
+                    </p>
                   </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {job.tipe_cut && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        🔪 Tipe Cut
-                      </label>
-                      <div className="bg-orange-50 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-orange-500">
-                        <p className="text-gray-900 dark:text-white font-semibold">{job.tipe_cut}</p>
-                      </div>
-                    </div>
-                  )}
-                  {job.tikor_cut && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        📍 Tikor Cut
-                      </label>
-                      <div className="bg-orange-50 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-orange-500">
-                        <p className="text-gray-900 dark:text-white font-semibold">{job.tikor_cut}</p>
-                      </div>
-                    </div>
-                  )}
-                  {job.tipe_kabel && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        🔌 Tipe Kabel
-                      </label>
-                      <div className="bg-orange-50 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-orange-500">
-                        <p className="text-gray-900 dark:text-white font-semibold">{job.tipe_kabel}</p>
-                      </div>
-                    </div>
-                  )}
+                  <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg border border-blue-200 dark:border-gray-600">
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                      Jam Selesai
+                    </label>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {job.jam_selesai_fo || '-'}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Notes Section */}
+              {job.note_fo && (
+                <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="material-icons text-purple-600 dark:text-purple-400">note</span>
+                    Catatan
+                  </h3>
+                  <div className="bg-purple-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-purple-500">
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{job.note_fo}</p>
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Catatan/Keterangan */}
-            {job.keterangan && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="material-icons text-blue-600 dark:text-blue-400">description</span>
-                  Keterangan
-                </h2>
-                <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-blue-500">
-                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{job.keterangan}</p>
-                </div>
-              </div>
-            )}
 
             {/* Photos */}
             {(job.foto_rumah || job.foto_pemasangan) && (
@@ -234,33 +244,90 @@ export default function HistoryJobDetailFO() {
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {job.foto_rumah && (
-                    <div className="group">
+                    <div
+                      className="group cursor-pointer"
+                      onClick={() =>
+                        setSelectedImage({
+                          src: getImageUrl(job.foto_rumah),
+                          title: "Foto Rumah",
+                        })
+                      }
+                    >
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Rumah
                       </label>
-                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-orange-500 transition-all">
+                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-orange-500 transition-all shadow-md hover:shadow-lg">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_rumah}`}
+                          src={getImageUrl(job.foto_rumah)}
                           alt="Foto Rumah"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src =
+                              "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        Klik untuk memperbesar
+                      </p>
                     </div>
                   )}
                   {job.foto_pemasangan && (
-                    <div className="group">
+                    <div
+                      className="group cursor-pointer"
+                      onClick={() =>
+                        setSelectedImage({
+                          src: getImageUrl(job.foto_pemasangan),
+                          title: "Foto Troubleshooting",
+                        })
+                      }
+                    >
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                         📸 Foto Troubleshooting
                       </label>
-                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-orange-500 transition-all">
+                      <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 group-hover:border-orange-500 transition-all shadow-md hover:shadow-lg">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${job.foto_pemasangan}`}
+                          src={getImageUrl(job.foto_pemasangan)}
                           alt="Foto Troubleshooting"
+                          onError={(e) => {
+                            console.error('Image failed to load:', e.target.src);
+                            e.target.src =
+                              "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23444%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2245%25%22 font-size=%2218%22 fill=%22%23aaa%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGambar tidak dapat dimuat%3C/text%3E%3Ctext x=%2250%25%22 y=%2255%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPeriksa console untuk detail%3C/text%3E%3C/svg%3E";
+                          }}
                           className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        Klik untuk memperbesar
+                      </p>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Image Modal */}
+            {selectedImage && (
+              <div
+                className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+                onClick={() => setSelectedImage(null)}
+              >
+                <div
+                  className="relative max-w-4xl max-h-screen"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="absolute top-4 right-4 bg-gray-900 hover:bg-gray-800 text-white rounded-full p-2 transition-colors z-10"
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                  <img
+                    src={selectedImage.src}
+                    alt={selectedImage.title}
+                    className="max-w-full max-h-screen object-contain"
+                  />
                 </div>
               </div>
             )}

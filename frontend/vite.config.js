@@ -58,8 +58,6 @@ export default defineConfig({
     sourcemap: false,
     // Enable dynamic import bundling
     cssCodeSplit: true,
-    // Minify HTML
-    minify: 'terser',
   },
   define: {
     __DEV__: JSON.stringify(false),

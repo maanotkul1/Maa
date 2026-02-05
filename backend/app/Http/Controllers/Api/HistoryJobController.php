@@ -16,7 +16,11 @@ class HistoryJobController extends Controller
      */
     public function index(Request $request)
     {
-        $query = HistoryJob::with(['creator', 'updater', 'photos']);
+        $query = HistoryJob::with(['creator:id,name', 'updater:id,name'])
+            ->select(['id', 'job_number', 'job_type', 'nama_client', 'nama_client_wireless', 'nama_client_fo',
+                      'tanggal_pekerjaan', 'tanggal_wireless', 'tanggal_fo', 'status', 'field_engineer_1',
+                      'field_engineer_2', 'field_engineer_3', 'tikor_odp_jb', 'port_odp', 'redaman',
+                      'created_by', 'updated_by', 'created_at', 'updated_at']);
 
         // Filter by role - FE can see jobs where their name appears in any field engineer field
         if ($request->user()->role === 'fe') {
@@ -52,6 +56,8 @@ class HistoryJobController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('job_number', 'like', "%{$search}%")
                   ->orWhere('nama_client', 'like', "%{$search}%")
+                  ->orWhere('nama_client_wireless', 'like', "%{$search}%")
+                  ->orWhere('nama_client_fo', 'like', "%{$search}%")
                   ->orWhere('tikor_odp_jb', 'like', "%{$search}%")
                   ->orWhere('port_odp', 'like', "%{$search}%")
                   ->orWhere('field_engineer_1', 'like', "%{$search}%")
@@ -98,54 +104,50 @@ class HistoryJobController extends Controller
      */
     public function store(Request $request)
     {
+        $jobType = $request->input('job_type');
+
+        // Base rules - different based on job_type
         $rules = [
             'job_type' => 'required|in:instalasi,troubleshooting_fo,troubleshooting_wireless',
-            'nama_client' => 'required|string|max:255',
-            'tanggal_pekerjaan' => 'required|date',
-            'field_engineer_1' => 'nullable|string|max:255',
             'foto_rumah' => 'nullable|image|max:5120',
             'foto_pemasangan' => 'nullable|image|max:5120',
         ];
 
         // Conditional rules based on job_type ONLY
-        $jobType = $request->input('job_type');
-
-        if ($jobType === 'instalasi') {
+        if ($jobType === 'troubleshooting_wireless') {
+            // Wireless uses different field names
             $rules += [
-                'panjang_kabel' => 'required|numeric|min:0',
-                'tikor_odp_jb' => 'nullable|string|max:255',
-                'port_odp' => 'nullable|string|max:50',
-                'redaman' => 'nullable|string',
+                'tanggal_wireless' => 'required|date',
+                'nama_client_wireless' => 'required|string|max:255',
+                'odp_pop_wireless' => 'nullable|string|max:255',
+                'suspect_wireless' => 'nullable|string|max:255',
+                'action_wireless' => 'nullable|string|max:255',
+                'redaman_signal_wireless' => 'nullable|string|max:255',
+                'tipe_kabel_wireless' => 'nullable|string|max:255',
+                'petugas_fe_wireless' => 'nullable|string|max:255',
+                'jam_datang' => 'nullable|date_format:H:i',
+                'jam_selesai' => 'nullable|date_format:H:i',
+                'note_wireless' => 'nullable|string',
             ];
         } else if ($jobType === 'troubleshooting_fo') {
+            // FO uses separate fields
             $rules += [
-                'tikor_odp_jb' => 'required|string|max:255',
-                'port_odp' => 'nullable|string|max:50',
-                'redaman' => 'nullable|string',
-                'detail_action' => 'nullable|string',
-                'tipe_cut' => 'nullable|string|max:100',
-                'tikor_cut' => 'nullable|string|max:255',
-                'tipe_kabel' => 'nullable|string|max:100',
+                'tanggal_fo' => 'required|date',
+                'nama_client_fo' => 'required|string|max:255',
+                'odp_pop_fo' => 'nullable|string|max:255',
+                'suspect_fo' => 'nullable|string|max:255',
+                'action_fo' => 'nullable|string|max:255',
+                'petugas_fe_fo' => 'nullable|string|max:255',
+                'jam_datang_fo' => 'nullable|date_format:H:i',
+                'jam_selesai_fo' => 'nullable|date_format:H:i',
+                'note_fo' => 'nullable|string',
             ];
-        } else if ($jobType === 'troubleshooting_wireless') {
+        } else {
+            // Instalasi uses common fields
             $rules += [
-                'lokasi_site' => 'nullable|string|max:255',
-                'area_ruangan' => 'nullable|string|max:255',
-                'prioritas' => 'nullable|in:low,medium,high',
-                'tanggal_waktu_pengerjaan' => 'nullable|date_format:Y-m-d\TH:i',
-                'teknisi_id' => 'nullable|integer',
-                'catatan_teknisi' => 'nullable|string',
-                'port_odp' => 'nullable|string|max:50',
-                'redaman' => 'nullable|string',
-                'peralatan_radio' => 'nullable|boolean',
-                'peralatan_kabel' => 'nullable|boolean',
-                'peralatan_adaptor' => 'nullable|boolean',
-                'peralatan_poe' => 'nullable|boolean',
-                'peralatan_rj45' => 'nullable|boolean',
-                'peralatan_router_switch' => 'nullable|boolean',
-                'peralatan_ap' => 'nullable|boolean',
-                'peralatan_lainnya' => 'nullable|boolean',
-                'peralatan_lainnya_keterangan' => 'nullable|string|max:255',
+                'nama_client' => 'required|string|max:255',
+                'tanggal_pekerjaan' => 'required|date',
+                'field_engineer_1' => 'nullable|string|max:255',
             ];
         }
 
@@ -154,52 +156,80 @@ class HistoryJobController extends Controller
             'keterangan' => 'nullable|string',
         ];
 
+        // Instalasi specific rules
+        if ($jobType === 'instalasi') {
+            $rules += [
+                'panjang_kabel' => 'required|numeric|min:0',
+                'tikor_odp_jb' => 'nullable|string|max:255',
+                'port_odp' => 'nullable|string|max:50',
+                'redaman' => 'nullable|string',
+            ];
+        }
+
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
-        // Generate job number
-        $jobNumber = HistoryJob::generateJobNumber();
+        // Generate job number based on job type
+        $jobNumber = HistoryJob::generateJobNumber($jobType);
 
-        $data = $request->only([
-            'job_type',
-            'nama_client',
-            'tikor_odp_jb',
-            'port_odp',
-            'redaman',
-            'field_engineer_1',
-            'tanggal_pekerjaan',
-            'panjang_kabel',
-            'detail_action',
-            'tipe_cut',
-            'tikor_cut',
-            'tipe_kabel',
-            'keterangan',
-            // Wireless fields
-            'lokasi_site',
-            'area_ruangan',
-            'prioritas',
-            'tanggal_waktu_pengerjaan',
-            'teknisi_id',
-            'catatan_teknisi',
-            // Equipment/Damage fields
-            'peralatan_radio',
-            'peralatan_kabel',
-            'peralatan_adaptor',
-            'peralatan_poe',
-            'peralatan_rj45',
-            'peralatan_router_switch',
-            'peralatan_ap',
-            'peralatan_lainnya',
-            'peralatan_lainnya_keterangan',
-        ]);
-
-        // Ensure field_engineer_1 is set (even if empty string)
-        $data['field_engineer_1'] = $request->input('field_engineer_1', '');
-        $data['field_engineer_2'] = null;
-        $data['field_engineer_3'] = null;
+        // Extract data based on job type
+        if ($jobType === 'troubleshooting_wireless') {
+            // Wireless uses different fields
+            $data = $request->only([
+                'job_type',
+                'tanggal_wireless',
+                'nama_client_wireless',
+                'odp_pop_wireless',
+                'suspect_wireless',
+                'action_wireless',
+                'redaman_signal_wireless',
+                'tipe_kabel_wireless',
+                'petugas_fe_wireless',
+                'jam_datang',
+                'jam_selesai',
+                'note_wireless',
+            ]);
+            // Set defaults for common fields
+            $data['nama_client'] = $request->input('nama_client_wireless') ?: 'N/A';
+            $data['tanggal_pekerjaan'] = $request->input('tanggal_wireless') ?: now()->format('Y-m-d');
+            $data['field_engineer_1'] = $request->input('petugas_fe_wireless') ?: 'N/A';
+        } else if ($jobType === 'troubleshooting_fo') {
+            // FO uses separate fields
+            $data = $request->only([
+                'job_type',
+                'tanggal_fo',
+                'nama_client_fo',
+                'odp_pop_fo',
+                'suspect_fo',
+                'action_fo',
+                'petugas_fe_fo',
+                'jam_datang_fo',
+                'jam_selesai_fo',
+                'note_fo',
+            ]);
+            // Set defaults for common fields
+            $data['nama_client'] = $request->input('nama_client_fo') ?: 'N/A';
+            $data['tanggal_pekerjaan'] = $request->input('tanggal_fo') ?: now()->format('Y-m-d');
+            $data['field_engineer_1'] = $request->input('petugas_fe_fo') ?: 'N/A';
+        } else {
+            // Instalasi
+            $data = $request->only([
+                'job_type',
+                'nama_client',
+                'tikor_odp_jb',
+                'port_odp',
+                'redaman',
+                'field_engineer_1',
+                'tanggal_pekerjaan',
+                'panjang_kabel',
+                'keterangan',
+            ]);
+            $data['field_engineer_2'] = null;
+            $data['field_engineer_3'] = null;
+        }
 
         $data['job_number'] = $jobNumber;
         $data['status'] = 'completed';
@@ -266,111 +296,94 @@ class HistoryJobController extends Controller
             'field_engineer_1' => 'nullable|string|max:255',
             'tanggal_pekerjaan' => 'sometimes|date',
             'panjang_kabel' => 'nullable|numeric',
-            'detail_action' => 'nullable|string',
-            'tipe_cut' => 'nullable|string|max:100',
-            'tikor_cut' => 'nullable|string|max:255',
-            'tipe_kabel' => 'nullable|string|max:100',
             'keterangan' => 'nullable|string',
             'foto_rumah' => 'nullable|image|max:5120',
             'foto_pemasangan' => 'nullable|image|max:5120',
             // Wireless fields
-            'lokasi_site' => 'nullable|string|max:255',
-            'area_ruangan' => 'nullable|string|max:255',
-            'prioritas' => 'nullable|in:low,medium,high',
-            'tanggal_waktu_pengerjaan' => 'nullable|date_format:Y-m-d\TH:i',
-            'jenis_perangkat' => 'nullable|string|max:100',
-            'brand_perangkat' => 'nullable|string|max:100',
-            'model_perangkat' => 'nullable|string|max:100',
-            'ip_address_perangkat' => 'nullable|ip',
-            'ssid' => 'nullable|string|max:255',
-            'interface_radio' => 'nullable|in:2_4ghz,5ghz,dual_band',
-            'mac_address' => 'nullable|string|max:50',
-            'keluhan_list' => 'nullable|json',
-            'keluhan_detail' => 'nullable|string',
-            'signal_strength_rssi' => 'nullable|string|max:100',
-            'channel' => 'nullable|string|max:50',
-            'channel_width' => 'nullable|string|max:50',
-            'jumlah_client' => 'nullable|integer',
-            'status_dhcp' => 'nullable|in:not_checked,active,error',
-            'ping_latency' => 'nullable|string|max:50',
-            'packet_loss' => 'nullable|string|max:50',
-            'interference' => 'nullable|string',
-            'authentication_issue' => 'nullable|string',
-            'log_error' => 'nullable|string',
-            'tindakan_list' => 'nullable|json',
-            'detail_tindakan_wireless' => 'nullable|string',
-            'status_koneksi_wireless' => 'nullable|in:unknown,connected,disconnected,unstable',
-            'status_internet' => 'nullable|in:unknown,online,offline,intermittent',
-            'kondisi_setelah_tindakan' => 'nullable|string',
-            'feedback_user' => 'nullable|string',
-            'status_akhir' => 'nullable|in:solved,monitoring,escalated',
-            'escalation_reason' => 'nullable|string',
-            'escalated_to' => 'nullable|string|max:255',
-            'catatan_teknisi' => 'nullable|string',
-            'rekomendasi_jangka_panjang' => 'nullable|string',
-            'rencana_tindak_lanjut' => 'nullable|string',
+            'tanggal_wireless' => 'nullable|date',
+            'nama_client_wireless' => 'nullable|string|max:255',
+            'odp_pop_wireless' => 'nullable|string|max:255',
+            'suspect_wireless' => 'nullable|string|max:255',
+            'action_wireless' => 'nullable|string|max:255',
+            'redaman_signal_wireless' => 'nullable|string|max:255',
+            'tipe_kabel_wireless' => 'nullable|string|max:255',
+            'petugas_fe_wireless' => 'nullable|string|max:255',
+            'jam_datang' => 'nullable|date_format:H:i',
+            'jam_selesai' => 'nullable|date_format:H:i',
+            'note_wireless' => 'nullable|string',
+            // FO fields
+            'tanggal_fo' => 'nullable|date',
+            'nama_client_fo' => 'nullable|string|max:255',
+            'odp_pop_fo' => 'nullable|string|max:255',
+            'suspect_fo' => 'nullable|string|max:255',
+            'action_fo' => 'nullable|string|max:255',
+            'petugas_fe_fo' => 'nullable|string|max:255',
+            'jam_datang_fo' => 'nullable|date_format:H:i',
+            'jam_selesai_fo' => 'nullable|date_format:H:i',
+            'note_fo' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $data = $request->only([
-            'job_type',
-            'nama_client',
-            'tikor_odp_jb',
-            'port_odp',
-            'redaman',
-            'field_engineer_1',
-            'tanggal_pekerjaan',
-            'panjang_kabel',
-            'detail_action',
-            'tipe_cut',
-            'tikor_cut',
-            'tipe_kabel',
-            'keterangan',
-            // Wireless fields
-            'lokasi_site',
-            'area_ruangan',
-            'prioritas',
-            'tanggal_waktu_pengerjaan',
-            'jenis_perangkat',
-            'brand_perangkat',
-            'model_perangkat',
-            'ip_address_perangkat',
-            'ssid',
-            'interface_radio',
-            'mac_address',
-            'keluhan_list',
-            'keluhan_detail',
-            'signal_strength_rssi',
-            'channel',
-            'channel_width',
-            'jumlah_client',
-            'status_dhcp',
-            'ping_latency',
-            'packet_loss',
-            'interference',
-            'authentication_issue',
-            'log_error',
-            'tindakan_list',
-            'detail_tindakan_wireless',
-            'status_koneksi_wireless',
-            'status_internet',
-            'kondisi_setelah_tindakan',
-            'feedback_user',
-            'status_akhir',
-            'escalation_reason',
-            'escalated_to',
-            'catatan_teknisi',
-            'rekomendasi_jangka_panjang',
-            'rencana_tindak_lanjut',
-        ]);
+        // Extract data based on job type
+        $jobType = $request->input('job_type', $job->job_type);
 
-        // Ensure field_engineer_1 is set (even if empty string)
-        $data['field_engineer_1'] = $request->input('field_engineer_1', '');
-        $data['field_engineer_2'] = null;
-        $data['field_engineer_3'] = null;
+        if ($jobType === 'troubleshooting_wireless') {
+            // Wireless uses different fields
+            $data = $request->only([
+                'job_type',
+                'tanggal_wireless',
+                'nama_client_wireless',
+                'odp_pop_wireless',
+                'suspect_wireless',
+                'action_wireless',
+                'redaman_signal_wireless',
+                'tipe_kabel_wireless',
+                'petugas_fe_wireless',
+                'jam_datang',
+                'jam_selesai',
+                'note_wireless',
+            ]);
+            if ($jobType === 'troubleshooting_wireless') {
+                $data['nama_client'] = $request->input('nama_client_wireless') ?: $job->nama_client;
+                $data['tanggal_pekerjaan'] = $request->input('tanggal_wireless') ?: $job->tanggal_pekerjaan;
+                $data['field_engineer_1'] = $request->input('petugas_fe_wireless') ?: $job->field_engineer_1;
+            }
+        } else if ($jobType === 'troubleshooting_fo') {
+            // FO uses separate fields
+            $data = $request->only([
+                'job_type',
+                'tanggal_fo',
+                'nama_client_fo',
+                'odp_pop_fo',
+                'suspect_fo',
+                'action_fo',
+                'petugas_fe_fo',
+                'jam_datang_fo',
+                'jam_selesai_fo',
+                'note_fo',
+            ]);
+            $data['nama_client'] = $request->input('nama_client_fo') ?: $job->nama_client;
+            $data['tanggal_pekerjaan'] = $request->input('tanggal_fo') ?: $job->tanggal_pekerjaan;
+            $data['field_engineer_1'] = $request->input('petugas_fe_fo') ?: $job->field_engineer_1;
+        } else {
+            // Instalasi
+            $data = $request->only([
+                'job_type',
+                'nama_client',
+                'tikor_odp_jb',
+                'port_odp',
+                'redaman',
+                'field_engineer_1',
+                'tanggal_pekerjaan',
+                'panjang_kabel',
+                'keterangan',
+            ]);
+            $data['field_engineer_2'] = null;
+            $data['field_engineer_3'] = null;
+        }
 
         $data['updated_by'] = $request->user()->id;
 
@@ -408,28 +421,27 @@ class HistoryJobController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Delete photos (non-blocking - async would be better but delete sync for now)
+        // Collect all file paths to delete
+        $filesToDelete = [];
+
         if ($job->foto_rumah) {
-            try {
-                Storage::disk('public')->delete($job->foto_rumah);
-            } catch (\Exception $e) {
-                // Log error but don't block deletion
-            }
+            $filesToDelete[] = $job->foto_rumah;
         }
         if ($job->foto_pemasangan) {
-            try {
-                Storage::disk('public')->delete($job->foto_pemasangan);
-            } catch (\Exception $e) {
-                // Log error but don't block deletion
-            }
+            $filesToDelete[] = $job->foto_pemasangan;
         }
 
-        // Delete related photos
-        foreach ($job->photos as $photo) {
+        // Get all related photo paths
+        $job->photos->each(function ($photo) use (&$filesToDelete) {
+            $filesToDelete[] = $photo->photo_path;
+        });
+
+        // Delete all files at once
+        if (!empty($filesToDelete)) {
             try {
-                Storage::disk('public')->delete($photo->photo_path);
+                Storage::disk('public')->delete($filesToDelete);
             } catch (\Exception $e) {
-                // Log error but continue
+                // Log error but don't block deletion
             }
         }
 
